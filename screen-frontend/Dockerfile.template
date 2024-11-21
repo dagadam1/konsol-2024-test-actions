@@ -1,0 +1,16 @@
+FROM balenalib/%%RESIN_MACHINE_NAME%%-node:18-run
+# Resin is now called Balena and the old resin image is obsolete
+
+WORKDIR /usr/src/app/frontend
+
+COPY package.json package.json
+
+RUN JOBS=MAX npm install --production
+
+COPY . ./
+
+# ENV SERVER_URL="https://f.kth.se", hardcoded in instagramCompiler.js instead.
+RUN npm run-script build
+RUN npm install -g serve
+ENV INITSYSTEM on
+CMD ["serve", "--single", "build", "-p", "3000"]
