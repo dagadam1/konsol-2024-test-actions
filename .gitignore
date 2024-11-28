@@ -5,3 +5,4 @@ backend/.env
 backend/screen-frontend-build
 screen-frontend/node_modules
 screen-frontend/build
+# admin-frontend has its own .gitignore
