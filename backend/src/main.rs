@@ -74,6 +74,22 @@ async fn add_user(
     Ok(HttpResponse::Created().json(user))
 }
 
+#[get("/api/slides")]
+async fn get_slides(
+    pool: web::Data<DbPool>
+) -> actix_web::Result<impl Responder> {
+    
+    let all_slides = web::block(move || {
+        let mut conn = pool.get()?;
+        actions::get_all_slides(&mut conn)
+    })
+    .await?
+    // map diesel query errors to a 500 error response
+    .map_err(error::ErrorInternalServerError)?;
+    
+    Ok(HttpResponse::Ok().json(all_slides))
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenvy::dotenv().ok();
@@ -93,6 +109,7 @@ async fn main() -> std::io::Result<()> {
             // add route handlers
             .service(get_user)
             .service(add_user)
+            .service(get_slides)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

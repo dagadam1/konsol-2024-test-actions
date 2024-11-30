@@ -5,6 +5,16 @@ use crate::models;
 
 type DbError = Box<dyn std::error::Error + Send + Sync>;
 
+pub fn get_all_slides(
+    conn: &mut SqliteConnection,
+) -> Result<Vec<models::Slide>, DbError> {
+    use crate::schema::slides::dsl::*;
+
+    let all_slides = slides.load::<models::Slide>(conn)?;
+
+    Ok(all_slides)
+}
+
 /// Run query using Diesel to find user by uid and return it.
 pub fn find_user_by_uid(
     conn: &mut SqliteConnection,
