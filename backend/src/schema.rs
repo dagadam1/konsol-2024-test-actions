@@ -2,10 +2,9 @@
 
 diesel::table! {
     slides (id) {
-        id -> Integer,
+        id -> Text,
         title -> Nullable<Text>,
         description -> Nullable<Text>,
-        image_path -> Text,
         start_date -> Timestamp,
         end_date -> Timestamp,
         active -> Bool,
