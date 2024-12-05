@@ -1,7 +1,7 @@
 use diesel::prelude::*;
 use uuid::Uuid;
 
-use crate::models;
+use crate::models::{self, NewSlide};
 
 type DbError = Box<dyn std::error::Error + Send + Sync>;
 
@@ -13,6 +13,33 @@ pub fn get_all_slides(
     let all_slides = slides.load::<models::Slide>(conn)?;
 
     Ok(all_slides)
+}
+
+pub fn insert_new_slide(
+    conn: &mut SqliteConnection,
+    new_slide: models::NewSlide,
+) -> Result<(), DbError> {
+    use crate::schema::slides::dsl::*;
+
+    let user_id = Uuid::new_v4().to_string();
+
+    let new_slide = models::Slide {
+        id: user_id.to_owned(),
+        title: new_slide.title,
+        description: new_slide.description,
+        start_date: new_slide.start_date,
+        end_date: new_slide.end_date,
+        active: true,
+    };
+
+    diesel::insert_into(slides).values(&new_slide).execute(conn)?;
+
+    Ok(())
+}
+
+fn save_image_file(
+) -> Result<(), actix_web::Error> {
+    todo!()
 }
 
 /// Run query using Diesel to find user by uid and return it.

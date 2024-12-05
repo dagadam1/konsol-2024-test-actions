@@ -90,6 +90,26 @@ async fn get_slides(
     Ok(HttpResponse::Ok().json(all_slides))
 }
 
+#[post("/api/slides")]
+async fn add_slide(
+    pool: web::Data<DbPool>,
+    form: web::Json<models::NewSlide>,
+) -> actix_web::Result<impl Responder> {
+    // use web::block to offload blocking Diesel queries without blocking server thread
+    let slide = web::block(move || {
+        // note that obtaining a connection from the pool is also potentially blocking
+        let mut conn = pool.get()?;
+
+        actions::insert_new_slide(&mut conn, form.into_inner())
+    })
+    .await?
+    // map diesel query errors to a 500 error response
+    .map_err(error::ErrorInternalServerError)?;
+
+    Ok(HttpResponse::Created().json(slide))
+}
+
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenvy::dotenv().ok();
