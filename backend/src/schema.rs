@@ -3,8 +3,7 @@
 diesel::table! {
     slides (id) {
         id -> Text,
-        title -> Nullable<Text>,
-        description -> Nullable<Text>,
+        caption -> Text,
         start_date -> Timestamp,
         end_date -> Timestamp,
         active -> Bool,

@@ -25,8 +25,7 @@ pub fn insert_new_slide(
 
     let new_slide = models::Slide {
         id: user_id.to_owned(),
-        title: new_slide.title,
-        description: new_slide.description,
+        caption: new_slide.caption,
         start_date: new_slide.start_date,
         end_date: new_slide.end_date,
         active: true,

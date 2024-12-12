@@ -22,18 +22,15 @@ pub struct NewUser {
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Slide {
     pub id: String,
-    pub title: Option<String>,
-    pub description: Option<String>,
+    pub caption: String,
     pub start_date: NaiveDateTime,
     pub end_date: NaiveDateTime,
     pub active: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[diesel(table_name = slides)]
 pub struct NewSlide {
-    pub title: Option<String>,
-    pub description: Option<String>,
+    pub caption: String,
     pub start_date: NaiveDateTime,
     pub end_date: NaiveDateTime,
 }
