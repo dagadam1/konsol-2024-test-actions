@@ -6,11 +6,12 @@
 #[macro_use]
 extern crate diesel;
 
-use std::{borrow::Borrow, fs::File, path::{self, Path, PathBuf}};
+use std::{borrow::Borrow, fs::{self, File}, path::{self, Path, PathBuf}};
 
 use actix_web::{error::{self, ErrorInternalServerError}, get, middleware, post, web, App, HttpResponse, HttpServer, Responder};
 use actix_multipart::form::{tempfile::TempFile, MultipartForm, text::Text};
 use actix_cors::Cors;
+use chrono::{NaiveDate, NaiveTime};
 use diesel::{prelude::*, r2d2};
 use uuid::Uuid;
 
@@ -43,8 +44,10 @@ impl SlideUploadForm {
             models::Slide {
                 id: id.into(),
                 caption: self.caption.into_inner(),
-                start_date: self.start.into_inner().parse()?,
-                end_date: self.end.into_inner().parse()?,
+                // Since the form currently only has date input (but the db stores both date and time), we set the time to 00:00:00
+                // To do this, we first parse the date into a NaiveDate, and then add the time with NaiveDate::and_time
+                start_date: self.start.into_inner().parse::<NaiveDate>()?.and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap()),
+                end_date: self.end.into_inner().parse::<NaiveDate>()?.and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap()),
                 active: self.visible.into_inner(),
             },
         
@@ -199,6 +202,14 @@ async fn main() -> std::io::Result<()> {
 
     // initialize DB pool outside of `HttpServer::new` so that it is shared across all workers
     let pool = initialize_db_pool();
+
+    // If SLIDE_IMAGE_DIR does not exist, create it
+    if !fs::exists(SLIDE_IMAGE_DIR).expect("Unable to check if slide image directory exists") {
+        log::info!("Creating slide image directory at {SLIDE_IMAGE_DIR}");
+        fs::create_dir_all(SLIDE_IMAGE_DIR).expect(&format!("Unable to create slide image directory at {}", SLIDE_IMAGE_DIR));
+    }
+
+    log::info!("saving images at {SLIDE_IMAGE_DIR}");
 
     log::info!("starting HTTP server at http://localhost:8080");
 
