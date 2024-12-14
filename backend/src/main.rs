@@ -7,6 +7,7 @@
 extern crate diesel;
 
 use actix_web::{error, get, middleware, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_cors::Cors;
 use diesel::{prelude::*, r2d2};
 use uuid::Uuid;
 
@@ -121,11 +122,19 @@ async fn main() -> std::io::Result<()> {
     log::info!("starting HTTP server at http://localhost:8080");
 
     HttpServer::new(move || {
+
+        let cors = Cors::default()
+            .allow_any_origin() // TODO: restrict cors
+            .allow_any_method()
+            .allow_any_header();
+
+
         App::new()
             // add DB pool handle to app data; enables use of `web::Data<DbPool>` extractor
             .app_data(web::Data::new(pool.clone()))
             // add request logger middleware
             .wrap(middleware::Logger::default())
+            .wrap(cors)
             // add route handlers
             .service(get_user)
             .service(add_user)
