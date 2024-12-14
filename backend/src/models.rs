@@ -28,13 +28,6 @@ pub struct Slide {
     pub active: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct NewSlide {
-    pub caption: String,
-    pub start_date: NaiveDateTime,
-    pub end_date: NaiveDateTime,
-}
-
 impl NewUser {
     /// Constructs new user details from name.
     #[cfg(test)] // only needed in tests

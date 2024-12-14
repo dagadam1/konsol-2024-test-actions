@@ -1,7 +1,9 @@
+use std::io;
+
 use diesel::prelude::*;
 use uuid::Uuid;
 
-use crate::models::{self, NewSlide};
+use crate::models;
 
 type DbError = Box<dyn std::error::Error + Send + Sync>;
 
@@ -15,31 +17,19 @@ pub fn get_all_slides(
     Ok(all_slides)
 }
 
-pub fn insert_new_slide(
+pub fn insert_slide(
     conn: &mut SqliteConnection,
-    new_slide: models::NewSlide,
-) -> Result<(), DbError> {
+    slide: models::Slide,
+) -> Result<models::Slide, DbError> {
     use crate::schema::slides::dsl::*;
 
-    let user_id = Uuid::new_v4().to_string();
+    diesel::insert_into(slides)
+        .values(&slide)
+        .execute(conn)?;
 
-    let new_slide = models::Slide {
-        id: user_id.to_owned(),
-        caption: new_slide.caption,
-        start_date: new_slide.start_date,
-        end_date: new_slide.end_date,
-        active: true,
-    };
-
-    diesel::insert_into(slides).values(&new_slide).execute(conn)?;
-
-    Ok(())
+    Ok(slide)
 }
 
-fn save_image_file(
-) -> Result<(), actix_web::Error> {
-    todo!()
-}
 
 /// Run query using Diesel to find user by uid and return it.
 pub fn find_user_by_uid(
