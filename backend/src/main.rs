@@ -6,11 +6,12 @@
 #[macro_use]
 extern crate diesel;
 
-use std::{borrow::Borrow, fs::{self, File}, path::{self, Path, PathBuf}};
+use std::{any::Any, borrow::Borrow, fs::{self, File}, io, path::{self, Path, PathBuf}};
 
 use actix_web::{error::{self, ErrorInternalServerError}, get, middleware, post, web, App, HttpResponse, HttpServer, Responder};
 use actix_multipart::form::{tempfile::TempFile, MultipartForm, text::Text};
 use actix_cors::Cors;
+use actix_files;
 use chrono::{NaiveDate, NaiveTime};
 use diesel::{prelude::*, r2d2};
 use uuid::Uuid;
@@ -22,6 +23,7 @@ mod schema;
 /// Short-hand for the database pool type to use throughout the app.
 type DbPool = r2d2::Pool<r2d2::ConnectionManager<SqliteConnection>>;
 
+// The directory where slide images are saved. Will be created if it does not exist. This whole directory gets served as static files.
 // No trailing slash
 const SLIDE_IMAGE_DIR: &str = "/tmp/konsol_slides";
 
@@ -60,8 +62,17 @@ async fn save_image_file(
     temp_file: TempFile,
     filename: &str,
 ) -> actix_web::Result<()> {
-    let file_path: PathBuf = [SLIDE_IMAGE_DIR, filename].iter().collect();
+    let mime = match temp_file.content_type {
+        Some(mime) => {mime},
+        None => {return Err(error::ErrorInternalServerError("No content type found for file"))},
+    };
+    
+    // The file path is the SLIDE_IMAGE_DIR + filename. This is colleted into a PathBuf
+    let mut file_path: PathBuf = [SLIDE_IMAGE_DIR, filename].iter().collect();
+    // The MIME subtype determines the file extension
+    file_path.set_extension(mime.subtype().as_str());
 
+    log::info!("Saving image as: {:?}", file_path);
     web::block(move || temp_file.file.persist(file_path))
         .await?
         .map_err(|e| {
@@ -80,7 +91,7 @@ async fn remove_image_file(
     web::block(move || {
         std::fs::remove_file(file_path)
     })
-    .await
+    .await?
     .map_err(|e| {
         eprintln!("file error: {:?}", e);
         error::ErrorInternalServerError(e)
@@ -179,7 +190,7 @@ async fn add_user(
     Ok(HttpResponse::Created().json(user))
 }
 
-#[get("/api/slides")]
+#[get("/api/screen/slides")]
 async fn get_slides(
     pool: web::Data<DbPool>
 ) -> actix_web::Result<impl Responder> {
@@ -194,6 +205,47 @@ async fn get_slides(
     
     Ok(HttpResponse::Ok().json(all_slides))
 }
+
+
+// #[get("/api/slides/{slide_id}/img")]
+// async fn get_slide_img(
+//     pool: web::Data<DbPool>,
+//     slide_id: web::Path<Uuid>,
+// ) -> actix_web::Result<impl Responder> {
+//     let slide_id = slide_id.into_inner();
+
+//     // Image path will be the string SLIDE_IMAGE_DIR + slide_id. This is turned into a PathBuf
+//     let img_path = [SLIDE_IMAGE_DIR, &String::from(slide_id)].iter().collect::<PathBuf>();
+    
+//     // We don't need to check if the slide exists in the database, we only need to try to find the image file (this is fine right?)
+//     // Reading a file is blocking, so we offload it to a thread
+//     web::block(move || {
+//         match fs::read(img_path) {
+//             // TODO. File type should not be hardcoded to jpeg!
+//             Ok(img) => HttpResponse::Ok().content_type("image/jpeg").body(img),
+//             Err(e) => {
+//                 if let io::ErrorKind::NotFound = e.kind() {
+//                     HttpResponse::NotFound().body(format!("No image found for slide with ID: {slide_id}"))
+//                 } else {
+//                     HttpResponse::InternalServerError().body("Error")
+//                 }
+//             },
+//         }
+//     });
+
+//     match slide {
+//         Some(slide) => {
+//             let file_path: PathBuf = [SLIDE_IMAGE_DIR, &slide.id].iter().collect();
+//             let file = File::open(file_path).map_err(|e| {
+//                 eprintln!("file error: {:?}", e);
+//                 error::ErrorInternalServerError(e)
+//             })?;
+
+//             Ok(HttpResponse::Ok().content_type("image/jpeg").streaming(file))
+//         },
+//         None => Ok(HttpResponse::NotFound().body(format!("No slide found with ID: {slide_id}"))),
+//     }
+// }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -230,6 +282,7 @@ async fn main() -> std::io::Result<()> {
             .service(add_user)
             .service(get_slides)
             .service(save_slide)
+            .service(actix_files::Files::new("/slides", SLIDE_IMAGE_DIR))
             
     })
     .bind(("127.0.0.1", 8080))?
