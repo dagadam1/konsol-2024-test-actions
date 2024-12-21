@@ -26,6 +26,7 @@ pub struct Slide {
     pub start_date: NaiveDateTime,
     pub end_date: NaiveDateTime,
     pub active: bool,
+    pub filetype: String,
 }
 
 impl NewUser {

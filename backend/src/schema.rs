@@ -7,6 +7,7 @@ diesel::table! {
         start_date -> Timestamp,
         end_date -> Timestamp,
         active -> Bool,
+        filetype -> Text,
     }
 }
 

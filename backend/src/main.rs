@@ -6,7 +6,7 @@
 #[macro_use]
 extern crate diesel;
 
-use std::{any::Any, borrow::Borrow, fs::{self, File}, io, path::{self, Path, PathBuf}};
+use std::{ fs, path::PathBuf};
 
 use actix_web::{error::{self, ErrorInternalServerError}, get, middleware, post, web, App, HttpResponse, HttpServer, Responder};
 use actix_multipart::form::{tempfile::TempFile, MultipartForm, text::Text};
@@ -41,16 +41,28 @@ struct SlideUploadForm {
 }
 
 impl SlideUploadForm {
-    fn slide_and_image_from_form(self, id: Uuid) -> Result<(models::Slide, TempFile), chrono::ParseError> {
+    fn parse_form(self, id: Uuid) -> Result<(models::Slide, TempFile), actix_web::Error> {
+        
+        // Get the MIME type of the file. This determines the file extension
+        let mime = match self.image_file.content_type {
+            Some(ref mime) => mime,
+            None => {return Err(error::ErrorInternalServerError("No content type found for uploaded file"))},
+        };
+
         Ok((
             models::Slide {
                 id: id.into(),
                 caption: self.caption.into_inner(),
                 // Since the form currently only has date input (but the db stores both date and time), we set the time to 00:00:00
                 // To do this, we first parse the date into a NaiveDate, and then add the time with NaiveDate::and_time
-                start_date: self.start.into_inner().parse::<NaiveDate>()?.and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap()),
-                end_date: self.end.into_inner().parse::<NaiveDate>()?.and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap()),
+                start_date: self.start.into_inner().parse::<NaiveDate>()
+                    .map_err(error::ErrorInternalServerError)?
+                    .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap()),
+                end_date: self.end.into_inner().parse::<NaiveDate>()
+                    .map_err(error::ErrorInternalServerError)?
+                    .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap()),
                 active: self.visible.into_inner(),
+                filetype: mime.subtype().to_string(),
             },
         
             self.image_file
@@ -61,33 +73,40 @@ impl SlideUploadForm {
 async fn save_image_file(
     temp_file: TempFile,
     filename: &str,
-) -> actix_web::Result<()> {
-    let mime = match temp_file.content_type {
-        Some(mime) => {mime},
-        None => {return Err(error::ErrorInternalServerError("No content type found for file"))},
-    };
-    
+    file_type: &str,
+) -> actix_web::Result<PathBuf> {
+    // The filetype can be determined from the data in the TempFile itself, but since we've already had to determine it earlier,
+    // we can pass it in as an argument instead
+
     // The file path is the SLIDE_IMAGE_DIR + filename. This is colleted into a PathBuf
     let mut file_path: PathBuf = [SLIDE_IMAGE_DIR, filename].iter().collect();
-    // The MIME subtype determines the file extension
-    file_path.set_extension(mime.subtype().as_str());
+    // The file extension is the filetype
+    file_path.set_extension(file_type);
+
+    let saved_path = file_path.clone(); // We need to clone the path because we want to return it later
 
     log::info!("Saving image as: {:?}", file_path);
+    
+    // Saving the file is potentially blocking, so we use web::block to offload it to a threadpool
+    // There might be problems if the file is being read somwhere else while it is only partially written.
+    // I don't think we have to worry about it, but it can probably be fixed by writing a temporary file and then moving it once done
     web::block(move || temp_file.file.persist(file_path))
-        .await?
-        .map_err(|e| {
-            eprintln!("file error: {:?}", e);
-            error::ErrorInternalServerError(e)
+    .await?
+    .map_err(|e| {
+        eprintln!("file error: {:?}", e);
+        error::ErrorInternalServerError(e)
     })?;
 
-    Ok(())
+    // Return the path to the saved file
+    Ok(saved_path)
 }
 
-async fn remove_image_file(
-    filename: &str
+async fn remove_file(
+    file_path: PathBuf,
 ) -> actix_web::Result<()> {
-    let file_path: PathBuf = [SLIDE_IMAGE_DIR, filename].iter().collect();
+    log::info!("Removing file at: {:?}", file_path);
 
+    // Removing the file is potentially blocking, so we use web::block to offload it to a threadpool
     web::block(move || {
         std::fs::remove_file(file_path)
     })
@@ -107,13 +126,13 @@ async fn save_slide(
 ) -> actix_web::Result<impl Responder> {
     let id = Uuid::new_v4();
 
-    let (slide, image_file) = form.into_inner().slide_and_image_from_form(id).map_err(ErrorInternalServerError)?;
-
+    // Parse the form into a Slide and a TempFile (the image)
+    let (slide, image_file) = form.into_inner().parse_form(id).map_err(ErrorInternalServerError)?;
 
     // Save file to disk
-    save_image_file(image_file, &String::from(id)).await?;
+    let image_path = save_image_file(image_file, &String::from(id), &slide.filetype).await?;
 
-    // Add slide to database
+    // Add Slide to database
     let db_result = web::block(move || {
         let mut conn = pool.get()?;
 
@@ -126,7 +145,7 @@ async fn save_slide(
         Ok(added_slide) => Ok(HttpResponse::Created().json(added_slide)),
         Err(e) => {
             // If the database failed, remove the file from disk
-            remove_image_file(&String::from(id)).await?;
+            remove_file(image_path).await?;
             // Map the error to an internal server error
             Err(ErrorInternalServerError(e))
         }
@@ -205,47 +224,6 @@ async fn get_slides(
     
     Ok(HttpResponse::Ok().json(all_slides))
 }
-
-
-// #[get("/api/slides/{slide_id}/img")]
-// async fn get_slide_img(
-//     pool: web::Data<DbPool>,
-//     slide_id: web::Path<Uuid>,
-// ) -> actix_web::Result<impl Responder> {
-//     let slide_id = slide_id.into_inner();
-
-//     // Image path will be the string SLIDE_IMAGE_DIR + slide_id. This is turned into a PathBuf
-//     let img_path = [SLIDE_IMAGE_DIR, &String::from(slide_id)].iter().collect::<PathBuf>();
-    
-//     // We don't need to check if the slide exists in the database, we only need to try to find the image file (this is fine right?)
-//     // Reading a file is blocking, so we offload it to a thread
-//     web::block(move || {
-//         match fs::read(img_path) {
-//             // TODO. File type should not be hardcoded to jpeg!
-//             Ok(img) => HttpResponse::Ok().content_type("image/jpeg").body(img),
-//             Err(e) => {
-//                 if let io::ErrorKind::NotFound = e.kind() {
-//                     HttpResponse::NotFound().body(format!("No image found for slide with ID: {slide_id}"))
-//                 } else {
-//                     HttpResponse::InternalServerError().body("Error")
-//                 }
-//             },
-//         }
-//     });
-
-//     match slide {
-//         Some(slide) => {
-//             let file_path: PathBuf = [SLIDE_IMAGE_DIR, &slide.id].iter().collect();
-//             let file = File::open(file_path).map_err(|e| {
-//                 eprintln!("file error: {:?}", e);
-//                 error::ErrorInternalServerError(e)
-//             })?;
-
-//             Ok(HttpResponse::Ok().content_type("image/jpeg").streaming(file))
-//         },
-//         None => Ok(HttpResponse::NotFound().body(format!("No slide found with ID: {slide_id}"))),
-//     }
-// }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
