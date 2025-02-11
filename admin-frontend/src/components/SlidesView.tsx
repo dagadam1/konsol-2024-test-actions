@@ -1,49 +1,36 @@
-import { useEffect, useState } from 'react';
 import React from 'react';
-
-
-interface Slide {
-    id: string;
-    caption: string;
-    start_date: Date;
-    end_date: Date;
-    active: boolean;
-    filetype: string;
-}
+import { useEffect, useState } from 'react';
+import { SlideData } from '../types';
+import Slide from './Slide';
+import '../styles/Slide.css';
 
 const SlidesView: React.FC = () => {
 
-    const [slides, setSlides] = useState<Slide[]>([]);
+    const [slides, setSlides] = useState<SlideData[]>([]);
 
     useEffect(() => {
-        // fetch('http://localhost:3001/slides')
-        //     .then(response => response.json())
-        //     .then(json => {
-        //         setSlides([{
-        //             id: 'dummy-id',
-        //             caption: 'Dummy Slide',
-        //             start_date: new Date(),
-        //             end_date: new Date(),
-        //             active: true,
-        //             filetype: 'image/png'
-        //         }]);
-        //     });
-        setSlides([{ id: 'dummy-id', caption: 'Dummy Slide', start_date: new Date(), end_date: new Date(), active: true, filetype: 'image/png' }]);
+        fetch('http://localhost:8080/api/slides')
+            .then(response => response.json())
+            .then(json => {
+                setSlides([{
+                    id: 'dummy-id',
+                    caption: 'Dummy Slide',
+                    start_date: new Date(),
+                    end_date: new Date(),
+                    active: true,
+                    filetype: 'image/png'
+                }]);
+            });
+        setSlides([{ id: 'dummy-id', caption: 'Dummy Slide', start_date: new Date(), end_date: new Date(), active: true, filetype: 'image/png' }, { id: 'dummy-id2', caption: 'Dummy Slide', start_date: new Date(), end_date: new Date(), active: true, filetype: 'image/png' }, { id: 'dummy-id3', caption: 'Dummy Slide', start_date: new Date(), end_date: new Date(), active: true, filetype: 'image/png' }]);
         console.log(slides);
     }, []);
 
     return (
-        <div>
+        <div className='slides-view'>
             <h1>Slides</h1>
-            <div>
+            <div className='slides'>
                 {slides.map(slide => (
-                    <div key={slide.id}>
-                        <h2>{slide.caption}</h2>
-                        <p>Start Date: {slide.start_date.toString()}</p>
-                        <p>End Date: {slide.end_date.toString()}</p>
-                        <p>Active: {slide.active ? 'Yes' : 'No'}</p>
-                        <p>Filetype: {slide.filetype}</p>
-                    </div>
+                    <Slide slide={slide} />
                 ))}
             </div>
         </div>
