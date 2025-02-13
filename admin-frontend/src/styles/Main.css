@@ -1,0 +1,13 @@
+#floating-container {
+    position: relative;
+    width: 50%;
+    height: 50%;
+}
+
+#floating {
+    float: left;    
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    background-color: gray;
+}

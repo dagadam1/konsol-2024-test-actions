@@ -27,11 +27,8 @@ struct SlideUploadForm {
     start: Text<String>,
     end: Text<String>,
     visible: Text<bool>,
-    fullscreen: Text<bool>,
     #[multipart(rename = "imageFile")]
     image_file: TempFile,
-    #[multipart(rename = "tags[]")]
-    tags: Text<String>,
 }
 
 impl SlideUploadForm {
