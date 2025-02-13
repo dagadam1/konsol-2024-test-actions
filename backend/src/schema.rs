@@ -10,15 +10,3 @@ diesel::table! {
         filetype -> Text,
     }
 }
-
-diesel::table! {
-    users (id) {
-        id -> Text,
-        name -> Text,
-    }
-}
-
-diesel::allow_tables_to_appear_in_same_query!(
-    slides,
-    users,
-);
