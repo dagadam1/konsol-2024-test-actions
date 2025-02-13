@@ -1,8 +1,12 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
-    users (id) {
+    slides (id) {
         id -> Text,
-        name -> Text,
+        caption -> Text,
+        start_date -> Timestamp,
+        end_date -> Timestamp,
+        active -> Bool,
+        filetype -> Text,
     }
 }
