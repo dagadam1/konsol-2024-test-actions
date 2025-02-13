@@ -15,6 +15,7 @@ const Slide: React.FC<{ slide: SlideData }> = ({ slide }) => {
         });
     }
     return (
+        
         <div className="slide">
             <div className="slide-header">
                 <img className='slide-image' src={`https://f.kth.se/wp-content/uploads/FysikMedium.png`} alt={slide.caption} />  {/*  http://localhost:8080/api/slides/${slide.id} */}

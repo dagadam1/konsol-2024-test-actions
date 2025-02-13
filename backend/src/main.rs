@@ -192,6 +192,9 @@ async fn main() -> std::io::Result<()> {
             // add request logger middleware
             .wrap(middleware::Logger::default())
             .wrap(cors)
+            .service(save_slide)
+            .service(get_slides)
+            .service(get_slides)
             // add route handlers
     })
     .bind(("127.0.0.1", 8080))?

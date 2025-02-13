@@ -9,19 +9,10 @@ const SlidesView: React.FC = () => {
     const [slides, setSlides] = useState<SlideData[]>([]);
 
     useEffect(() => {
-        fetch('http://localhost:8080/api/slides')
+        fetch('http://localhost:8080/api/screen/slides')
             .then(response => response.json())
-            .then(json => {
-                setSlides([{
-                    id: 'dummy-id',
-                    caption: 'Dummy Slide',
-                    start_date: new Date(),
-                    end_date: new Date(),
-                    active: true,
-                    filetype: 'image/png'
-                }]);
-            });
-        setSlides([{ id: 'dummy-id', caption: 'Dummy Slide', start_date: new Date(), end_date: new Date(), active: true, filetype: 'image/png' }, { id: 'dummy-id2', caption: 'Dummy Slide', start_date: new Date(), end_date: new Date(), active: true, filetype: 'image/png' }, { id: 'dummy-id3', caption: 'Dummy Slide', start_date: new Date(), end_date: new Date(), active: true, filetype: 'image/png' }]);
+            .then(json => setSlides(json));
+        // setSlides([{ id: 'dummy-id', caption: 'Dummy Slide', start_date: new Date(), end_date: new Date(), active: true, filetype: 'image/png' }, { id: 'dummy-id2', caption: 'Dummy Slide', start_date: new Date(), end_date: new Date(), active: true, filetype: 'image/png' }, { id: 'dummy-id3', caption: 'Dummy Slide', start_date: new Date(), end_date: new Date(), active: true, filetype: 'image/png' }]);
         console.log(slides);
     }, []);
 
