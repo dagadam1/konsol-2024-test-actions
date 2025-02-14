@@ -4,7 +4,7 @@ enum SlTransportMode {
     Train = "TRAIN",    // Pendeltåg
     Metro = "METRO",    // Röda, gröna, blå linjen
     Bus = "BUS",        // Röd buss, blå buss
-    Tram = "TRAM",      // City line, Roslagsbanan etc.
+    Tram = "TRAM",      // Spårväg city, Roslagsbanan etc.
     Ferry = "FERRY",
     Ship = "SHIP",
     Taxi = "TAXI",
@@ -13,8 +13,11 @@ enum SlTransportMode {
 enum SlLineGroup {
     Train = "Pendeltåg",
     RedMetro = "Tunnelbanans röda linje",
+    GreenMetro = "Tunnelbanans gröna linje",
+    BlueMetro = "Tunnelbanans blå linje",
     Bus = "Buss",
     BlueBus = "Blåbuss",
+    CityLine = "Spårväg City",
     RoslagenLine = "Roslagsbanan",
 }
 
@@ -82,7 +85,7 @@ const departure_schema = z.object({
     stop_point: z.object({
         id: z.number(),
         name: z.string(),
-        designation: z.string(),
+        designation: z.optional(z.string()),
     }),
     line: z.object({
         id: z.number(),
@@ -113,7 +116,7 @@ function parse_departure(json: object, site_id: number): SlDeparture {
             journey_id: data.journey.id,
 
             stop_point_name: data.stop_point.name,
-            stop_point_designation: data.stop_point.designation,
+            stop_point_designation: data.stop_point.designation || "",
             destination: data.destination,
             via: data.via,
             direction: data.direction,
