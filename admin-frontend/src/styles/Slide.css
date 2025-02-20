@@ -20,12 +20,12 @@
 h1 {
     font-size: 2em;
     font-weight: 500;
-    color: purple;
 }
-*/
+
 
 .slides {
     display: flex;
+    flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;

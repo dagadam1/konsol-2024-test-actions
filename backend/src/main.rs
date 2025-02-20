@@ -192,6 +192,8 @@ async fn main() -> std::io::Result<()> {
             .service(save_slide)
             .service(get_slides)
             .service(get_slides)
+            .service(actix_files::Files::new("/api/screen/slides/images",SLIDE_IMAGE_DIR))
+
             // add route handlers
     })
     .bind(("127.0.0.1", 8080))?
