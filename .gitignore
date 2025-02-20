@@ -1,6 +1,5 @@
 backend/target
 backend/database.db
-backend/migrations
 backend/.env
 backend/screen-frontend-build
 screen-frontend/node_modules
