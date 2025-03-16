@@ -21,7 +21,7 @@ const SlidesView: React.FC = () => {
             <h1>Slides</h1>
             <div className='slides'>
                 {slides.map(slide => (
-                    <Slide slide={slide} />
+                    <Slide slide={slide} setSlides={setSlides}/>
                 ))}
             </div>
         </div>

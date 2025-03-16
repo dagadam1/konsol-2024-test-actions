@@ -2,13 +2,16 @@ import React from 'react';
 import { SlideData } from '../types';
 import '../styles/Slide.css';
 
-const Slide: React.FC<{ slide: SlideData }> = ({ slide }) => {
+const Slide: React.FC<{ slide: SlideData; setSlides: any}> = ({ slide, setSlides }) => {
     const handleRemove = () => {
-        fetch(`http://localhost:8080/api/slides/${slide.id}`, {
+        fetch(`http://localhost:8080/api/screen/slides/${slide.id}`, {
             method: 'DELETE'
         }).then(response => {
             if (response.ok) {
                 console.log('Slide removed');
+                // Remove this slide from the slide_array
+                console.log("removing")
+                setSlides((prevSlides: SlideData[]) => prevSlides.filter(s => s.id !== slide.id));
             } else {
                 console.log('Failed to remove slide');
             }
