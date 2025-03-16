@@ -1,6 +1,7 @@
 use diesel::prelude::*;
+use uuid::Uuid;
 
-use crate::models;
+use crate::models::{self, Slide};
 
 type DbError = Box<dyn std::error::Error + Send + Sync>;
 
@@ -22,6 +23,24 @@ pub fn insert_slide(
 
     diesel::insert_into(slides)
         .values(&slide)
+        .execute(conn)?;
+
+    Ok(slide)
+}
+
+pub fn pop_slide(
+    conn: &mut SqliteConnection,
+    uuid: &Uuid,
+) -> Result<Slide,DbError> {
+    use crate::schema::slides::dsl::*;
+
+    // Get slide
+    let slide = slides
+        .find(uuid.to_string())
+        .first(conn)?;
+    
+    // Delete slide
+    diesel::delete(slides.filter(id.eq(uuid.to_string())))
         .execute(conn)?;
 
     Ok(slide)

@@ -3,11 +3,12 @@ extern crate diesel;
 
 use std::{ fs, path::PathBuf};
 
-use actix_web::{error::{self, ErrorInternalServerError}, get, middleware, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{error::{self, ErrorInternalServerError}, get, delete, middleware, post, web, App, HttpResponse, HttpServer, Responder};
 use actix_multipart::form::{tempfile::TempFile, MultipartForm, text::Text};
 use actix_cors::Cors;
 use chrono::{NaiveDate, NaiveTime};
 use diesel::{prelude::*, r2d2};
+use models::Slide;
 use uuid::Uuid;
 
 mod actions;
@@ -19,7 +20,7 @@ type DbPool = r2d2::Pool<r2d2::ConnectionManager<SqliteConnection>>;
 
 // The directory where slide images are saved. Will be created if it does not exist. This whole directory gets served as static files.
 // No trailing slash
-const SLIDE_IMAGE_DIR: &str = "/tmp/konsol_slides";
+const SLIDE_IMAGE_DIR: &str = "./slide_images";
 
 #[derive(Debug, MultipartForm)]
 struct SlideUploadForm {
@@ -61,45 +62,39 @@ impl SlideUploadForm {
     }
 }
 
+fn get_image_path(slide: &Slide) -> PathBuf {
+    let mut path: PathBuf = [SLIDE_IMAGE_DIR, &slide.id].iter().collect();
+    path.set_extension(&slide.filetype);
+    path
+}
+
 async fn save_image_file(
     temp_file: TempFile,
-    filename: &str,
-    file_type: &str,
-) -> actix_web::Result<PathBuf> {
-    // The filetype can be determined from the data in the TempFile itself, but since we've already had to determine it earlier,
-    // we can pass it in as an argument instead
-
-    // The file path is the SLIDE_IMAGE_DIR + filename. This is colleted into a PathBuf
-    let mut file_path: PathBuf = [SLIDE_IMAGE_DIR, filename].iter().collect();
-    // The file extension is the filetype
-    file_path.set_extension(file_type);
-
-    let saved_path = file_path.clone(); // We need to clone the path because we want to return it later
-
-    log::info!("Saving image as: {:?}", file_path);
+    path: PathBuf,
+) -> actix_web::Result<()> {
+    log::info!("Saving image as: {:?}", &path);
     
     // Saving the file is potentially blocking, so we use web::block to offload it to a threadpool
     // There might be problems if the file is being read somwhere else while it is only partially written.
     // I don't think we have to worry about it, but it can probably be fixed by writing a temporary file and then moving it once done
-    web::block(move || temp_file.file.persist(file_path))
+    web::block(move || temp_file.file.persist(path))
     .await?
     .map_err(|e| {
         eprintln!("file error: {:?}", e);
         error::ErrorInternalServerError(e)
     })?;
 
-    // Return the path to the saved file
-    Ok(saved_path)
+    Ok(())
 }
 
 async fn remove_file(
-    file_path: PathBuf,
+    path: PathBuf,
 ) -> actix_web::Result<()> {
-    log::info!("Removing file at: {:?}", file_path);
+    log::info!("Removing file at: {:?}", path);
 
     // Removing the file is potentially blocking, so we use web::block to offload it to a threadpool
     web::block(move || {
-        std::fs::remove_file(file_path)
+        std::fs::remove_file(path)
     })
     .await?
     .map_err(|e| {
@@ -120,8 +115,10 @@ async fn save_slide(
     // Parse the form into a Slide and a TempFile (the image)
     let (slide, image_file) = form.into_inner().parse_form(id).map_err(ErrorInternalServerError)?;
 
+    let path = get_image_path(&slide);
+
     // Save file to disk
-    let image_path = save_image_file(image_file, &String::from(id), &slide.filetype).await?;
+    save_image_file(image_file, path.clone()).await?;
 
     // Add Slide to database
     let db_result = web::block(move || {
@@ -136,11 +133,37 @@ async fn save_slide(
         Ok(added_slide) => Ok(HttpResponse::Created().json(added_slide)),
         Err(e) => {
             // If the database failed, remove the file from disk
-            remove_file(image_path).await?;
+            remove_file(path).await?;
             // Map the error to an internal server error
             Err(ErrorInternalServerError(e))
         }
     }
+}
+
+#[delete("/api/screen/slides/{id}")]
+async fn remove_slide(
+    id: web::Path<String>,
+    pool: web::Data<DbPool>,
+) -> actix_web::Result<impl Responder> {
+    println!("{:?}", id);
+    let uuid = Uuid::parse_str(&id).map_err(|e| {
+        eprintln!("invalid uuid: {:?}", e);
+        error::ErrorInternalServerError(e)
+    })?;
+
+    let db_result = web::block(move || {
+        let mut conn = pool.get()?;
+
+        actions::pop_slide(&mut conn, &uuid)
+    }).await?;
+    
+    let slide = db_result.map_err(ErrorInternalServerError)?;
+
+    let path = get_image_path(&slide);
+
+    remove_file(path).await?;
+
+    Ok(HttpResponse::Ok().finish())
 }
 
 #[get("/api/screen/slides")]
@@ -192,6 +215,7 @@ async fn main() -> std::io::Result<()> {
             .service(save_slide)
             .service(get_slides)
             .service(get_slides)
+            .service(remove_slide)
             .service(actix_files::Files::new("/api/screen/slides/images",SLIDE_IMAGE_DIR))
 
             // add route handlers
