@@ -47,4 +47,4 @@ def create_mock_slides(db_path: str, count: int):
     print(f"Inserted {count} mock slides.")
 
 if __name__ == "__main__":
-    create_mock_slides("../database.db", 10)
+    create_mock_slides("../database.db", 4)
