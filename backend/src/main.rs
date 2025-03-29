@@ -190,7 +190,7 @@ async fn verify_token(req: web::Json<AuthRequest>) -> HttpResponse {
         Err(_) => return HttpResponse::Unauthorized().finish(),
     };
     
-    info!("{:?}", payload.);
+    info!("{:?}", payload);
 
     HttpResponse::Ok().finish()
 }
