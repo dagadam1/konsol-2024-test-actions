@@ -3,11 +3,15 @@ extern crate diesel;
 
 use std::{ fs, path::PathBuf};
 
-use actix_web::{error::{self, ErrorInternalServerError}, get, middleware, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{body, error::{self, ErrorInternalServerError}, get, http::header::map::Keys, middleware, post, web, App, HttpResponse, HttpServer, Responder};
 use actix_multipart::form::{tempfile::TempFile, MultipartForm, text::Text};
 use actix_cors::Cors;
 use chrono::{NaiveDate, NaiveTime};
 use diesel::{prelude::*, r2d2};
+use google_oauth::AsyncClient;
+use jsonwebtoken::{decode, DecodingKey, Validation};
+use log::{error, info, log};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 mod actions;
@@ -29,6 +33,18 @@ struct SlideUploadForm {
     visible: Text<bool>,
     #[multipart(rename = "imageFile")]
     image_file: TempFile,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Claims {
+    email: String,
+    hd: String, // Hosted domain (organization's domain)
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct AuthRequest {
+    client_id: String,
+    id_token: String,
 }
 
 impl SlideUploadForm {
@@ -59,6 +75,12 @@ impl SlideUploadForm {
             self.image_file
         ))
     }
+}
+
+async fn get_google_public_keys() -> Result<String, reqwest::Error> {
+    let res = reqwest::get("https://www.googleapis.com/oauth2/v3/certs").await?;
+    let body = res.text().await?;
+    Ok(body)
 }
 
 async fn save_image_file(
@@ -159,6 +181,20 @@ async fn get_slides(
     Ok(HttpResponse::Ok().json(all_slides))
 }
 
+#[post("/api/auth/verify")]
+async fn verify_token(req: web::Json<AuthRequest>) -> HttpResponse {
+
+    let client = AsyncClient::new(&req.client_id);
+    let payload = match client.validate_id_token(&req.id_token).await {
+        Ok(g) => g,
+        Err(_) => return HttpResponse::Unauthorized().finish(),
+    };
+    
+    info!("{:?}", payload.);
+
+    HttpResponse::Ok().finish()
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenvy::dotenv().ok();
@@ -192,6 +228,7 @@ async fn main() -> std::io::Result<()> {
             .service(save_slide)
             .service(get_slides)
             .service(get_slides)
+            .service(verify_token)
             .service(actix_files::Files::new("/api/screen/slides/images",SLIDE_IMAGE_DIR))
 
             // add route handlers
