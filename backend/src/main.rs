@@ -1,14 +1,15 @@
 #[macro_use]
 extern crate diesel;
 
-use std::{ fs, path::PathBuf};
+use std::{ fs, future::{ready, Ready}, path::PathBuf};
 
-use actix_web::{body, error::{self, ErrorInternalServerError}, get, http::header::map::Keys, middleware, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_session::{storage::CookieSessionStore, Session, SessionExt, SessionMiddleware};
+use actix_web::{body, cookie::{Cookie, Key}, error::{self, ErrorInternalServerError}, get, http::header::map::Keys, middleware, post, web, App, FromRequest, HttpResponse, HttpServer, Responder};
 use actix_multipart::form::{tempfile::TempFile, MultipartForm, text::Text};
 use actix_cors::Cors;
 use chrono::{NaiveDate, NaiveTime};
 use diesel::{prelude::*, r2d2};
-use google_oauth::AsyncClient;
+use google_oauth::{AsyncClient, GooglePayload};
 use jsonwebtoken::{decode, DecodingKey, Validation};
 use log::{error, info, log};
 use serde::{Deserialize, Serialize};
@@ -35,18 +36,6 @@ struct SlideUploadForm {
     image_file: TempFile,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct Claims {
-    email: String,
-    hd: String, // Hosted domain (organization's domain)
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct AuthRequest {
-    client_id: String,
-    id_token: String,
-}
-
 impl SlideUploadForm {
     fn parse_form(self, id: Uuid) -> Result<(models::Slide, TempFile), actix_web::Error> {
         
@@ -63,11 +52,11 @@ impl SlideUploadForm {
                 // Since the form currently only has date input (but the db stores both date and time), we set the time to 00:00:00
                 // To do this, we first parse the date into a NaiveDate, and then add the time with NaiveDate::and_time
                 start_date: self.start.into_inner().parse::<NaiveDate>()
-                    .map_err(error::ErrorInternalServerError)?
-                    .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap()),
+                .map_err(error::ErrorInternalServerError)?
+                .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap()),
                 end_date: self.end.into_inner().parse::<NaiveDate>()
-                    .map_err(error::ErrorInternalServerError)?
-                    .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap()),
+                .map_err(error::ErrorInternalServerError)?
+                .and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap()),
                 active: self.visible.into_inner(),
                 filetype: mime.subtype().to_string(),
             },
@@ -77,10 +66,31 @@ impl SlideUploadForm {
     }
 }
 
-async fn get_google_public_keys() -> Result<String, reqwest::Error> {
-    let res = reqwest::get("https://www.googleapis.com/oauth2/v3/certs").await?;
-    let body = res.text().await?;
-    Ok(body)
+#[derive(Debug)]
+pub struct AuthenticatedUser {
+    pub email: String,
+}
+
+impl FromRequest for  AuthenticatedUser {
+    type Error = actix_web::Error;
+    type Future = Ready<Result<Self, Self::Error>>;
+
+    fn from_request(req: &actix_web::HttpRequest, payload: &mut actix_web::dev::Payload) -> Self::Future {
+        let session = req.get_session();
+
+        match session.get::<String>("email") {
+            Ok(Some(email)) => { 
+                ready(Ok(AuthenticatedUser { email })) 
+            },
+            _ => ready(Err(actix_web::error::ErrorUnauthorized("Not logged in"))),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct AuthRequest {
+    client_id: String,
+    id_token: String,
 }
 
 async fn save_image_file(
@@ -181,8 +191,15 @@ async fn get_slides(
     Ok(HttpResponse::Ok().json(all_slides))
 }
 
+#[get("/hej")]
+async fn hej(req: actix_web::HttpRequest, session: Session) -> HttpResponse {
+    info!("{:?}", session.entries());
+    info!("Cookies: {:?}", req.headers().get("cookie"));
+    HttpResponse::Ok().finish()
+}
+
 #[post("/api/auth/verify")]
-async fn verify_token(req: web::Json<AuthRequest>) -> HttpResponse {
+async fn verify_token(req: web::Json<AuthRequest>, session: Session) -> HttpResponse {
 
     let client = AsyncClient::new(&req.client_id);
     let payload = match client.validate_id_token(&req.id_token).await {
@@ -190,15 +207,39 @@ async fn verify_token(req: web::Json<AuthRequest>) -> HttpResponse {
         Err(_) => return HttpResponse::Unauthorized().finish(),
     };
     
-    info!("{:?}", payload);
+    let expexted_hd = std::env::var("ORG_DOMAIN").expect("ORG_DOMAIN envvar is not set");
 
-    HttpResponse::Ok().finish()
+    info!("{:?}", payload);
+    info!("{:?}", payload.hd.unwrap_or("".into())==expexted_hd);
+    let last = session.get("email").unwrap().unwrap_or("".to_owned());
+    let res = session.insert("email", last + &payload.email.unwrap());
+    info!("{:?}", res);
+    info!("{:?}", session.entries());
+
+    let response = match res {
+        Ok(()) => HttpResponse::Ok().finish(),
+        Err(err) => HttpResponse::from_error(err),
+    };
+    session.renew();
+    info!("{:?}", response.headers());
+    info!("{:?}", response.cookies().collect::<Vec<Cookie>>());
+    response
+
+}
+
+async fn check_uers_permission(payload: GooglePayload) -> bool {
+    todo!()
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenvy::dotenv().ok();
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
+
+    // Secret key for cookie session store
+    // TODO replace with good key stored somewhere else in production
+    let secret_key = Key::from("hejjakwdjaklwjdlka jwkldjalkwdjalkwjdlkajlkdja klwd231ahwdah widuhalwiudh aliuwhdjlad".as_bytes());
+    
 
     // initialize DB pool outside of `HttpServer::new` so that it is shared across all workers
     let pool = initialize_db_pool();
@@ -213,22 +254,30 @@ async fn main() -> std::io::Result<()> {
 
     log::info!("starting HTTP server at http://localhost:8080");
 
+
     HttpServer::new(move || {
         let cors = Cors::default()
             .allow_any_origin() // TODO: restrict cors
             .allow_any_method()
-            .allow_any_header();
+            .allow_any_header()
+            .supports_credentials();
 
         App::new()
             // add DB pool handle to app data; enables use of `web::Data<DbPool>` extractor
             .app_data(web::Data::new(pool.clone()))
             // add request logger middleware
             .wrap(middleware::Logger::default())
+            .wrap(
+                SessionMiddleware::builder(CookieSessionStore::default(), secret_key.clone())
+                .cookie_secure(false) //TODO set to false in production
+                .build()
+                )
             .wrap(cors)
             .service(save_slide)
             .service(get_slides)
             .service(get_slides)
             .service(verify_token)
+            .service(hej)
             .service(actix_files::Files::new("/api/screen/slides/images",SLIDE_IMAGE_DIR))
 
             // add route handlers
