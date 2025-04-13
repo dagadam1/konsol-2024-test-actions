@@ -66,7 +66,7 @@ impl SlideUploadForm {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct AuthenticatedUser {
     pub email: String,
 }
@@ -177,7 +177,8 @@ async fn save_slide(
 
 #[get("/api/screen/slides")]
 async fn get_slides(
-    pool: web::Data<DbPool>
+    pool: web::Data<DbPool>,
+    _: AuthenticatedUser,
 ) -> actix_web::Result<impl Responder> {
     
     let all_slides = web::block(move || {
@@ -191,13 +192,6 @@ async fn get_slides(
     Ok(HttpResponse::Ok().json(all_slides))
 }
 
-#[get("/hej")]
-async fn hej(req: actix_web::HttpRequest, session: Session) -> HttpResponse {
-    info!("{:?}", session.entries());
-    info!("Cookies: {:?}", req.headers().get("cookie"));
-    HttpResponse::Ok().finish()
-}
-
 #[post("/api/auth/verify")]
 async fn verify_token(req: web::Json<AuthRequest>, session: Session) -> HttpResponse {
 
@@ -209,22 +203,49 @@ async fn verify_token(req: web::Json<AuthRequest>, session: Session) -> HttpResp
     
     let expexted_hd = std::env::var("ORG_DOMAIN").expect("ORG_DOMAIN envvar is not set");
 
-    info!("{:?}", payload);
-    info!("{:?}", payload.hd.unwrap_or("".into())==expexted_hd);
-    let last = session.get("email").unwrap().unwrap_or("".to_owned());
-    let res = session.insert("email", last + &payload.email.unwrap());
-    info!("{:?}", res);
-    info!("{:?}", session.entries());
-
-    let response = match res {
-        Ok(()) => HttpResponse::Ok().finish(),
-        Err(err) => HttpResponse::from_error(err),
+    let Some(email) = payload.email else { 
+        error!("No email in Google payload");
+        return HttpResponse::InternalServerError().finish();
     };
-    session.renew();
-    info!("{:?}", response.headers());
-    info!("{:?}", response.cookies().collect::<Vec<Cookie>>());
-    response
+    
+    let hd = payload.hd.unwrap_or("".to_owned());
 
+    // Check if user has correct domain, e.g. fysiksektionen.se
+    if hd != expexted_hd {
+        info!("User tried to authenticate with wrong domain: {}", hd);
+        return HttpResponse::Unauthorized().finish();
+    }
+
+    match session.insert("email", &email) {
+        Ok(()) => {
+            info!("User {} authenticated", email);
+            session.renew();
+            HttpResponse::Ok().json(AuthenticatedUser { email })
+        },
+        Err(e) => {
+            error!("{}", e);
+            HttpResponse::InternalServerError().finish()
+        },
+    }
+}
+
+#[get("/api/auth/status")]
+async fn login_status(user: AuthenticatedUser) -> HttpResponse {
+    HttpResponse::Ok().json(user)
+    // let email = session.get::<String>("email")?;
+    // dbg!("{}", email.clone().unwrap());
+    // Ok(
+    //     match email {
+    //     Some(email) => {HttpResponse::Ok().json(email)},
+    //     None => {HttpResponse::Unauthorized().finish()},
+    //    }
+    // )
+}
+
+#[post("/api/auth/logout")]
+async fn logout(user: AuthenticatedUser, session: Session) -> HttpResponse {
+    session.clear();
+    HttpResponse::Ok().finish()
 }
 
 async fn check_uers_permission(payload: GooglePayload) -> bool {
@@ -277,7 +298,8 @@ async fn main() -> std::io::Result<()> {
             .service(get_slides)
             .service(get_slides)
             .service(verify_token)
-            .service(hej)
+            .service(login_status)
+            .service(logout)
             .service(actix_files::Files::new("/api/screen/slides/images",SLIDE_IMAGE_DIR))
 
             // add route handlers
