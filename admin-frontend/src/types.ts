@@ -1,3 +1,5 @@
+import { Dispatch, SetStateAction } from "react";
+
 interface SlideData {
     id: string;
     caption: string;
@@ -7,4 +9,15 @@ interface SlideData {
     filetype: string;
 }
 
-export type { SlideData };
+interface User {
+    email: string;
+}
+
+
+// type UserContextType = User | null;
+type UserContextType = {
+    user: User | null;
+    setUser: Dispatch<SetStateAction<User | null>>;
+};
+
+export type { SlideData, User, UserContextType };
