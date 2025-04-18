@@ -3,16 +3,14 @@ extern crate diesel;
 
 use std::{ fs, future::{ready, Ready}, path::PathBuf};
 
-use actions::check_email_permission;
 use actix_session::{storage::CookieSessionStore, Session, SessionExt, SessionMiddleware};
-use actix_web::{body, cookie::{Cookie, Key}, error::{self, ErrorInternalServerError}, get, http::header::map::Keys, middleware, post, web, App, FromRequest, HttpResponse, HttpServer, Responder};
+use actix_web::{cookie::Key, error::{self, ErrorInternalServerError}, get, middleware, post, web, App, FromRequest, HttpResponse, HttpServer, Responder};
 use actix_multipart::form::{tempfile::TempFile, MultipartForm, text::Text};
 use actix_cors::Cors;
 use chrono::{NaiveDate, NaiveTime};
 use diesel::{prelude::*, r2d2};
-use google_oauth::{AsyncClient, GooglePayload};
-use jsonwebtoken::{decode, DecodingKey, Validation};
-use log::{error, info, log};
+use google_oauth::AsyncClient;
+use log::{error, info};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -83,7 +81,7 @@ impl FromRequest for AuthenticatedUser {
     type Error = actix_web::Error;
     type Future = Ready<Result<Self, Self::Error>>;
 
-    fn from_request(req: &actix_web::HttpRequest, payload: &mut actix_web::dev::Payload) -> Self::Future {
+    fn from_request(req: &actix_web::HttpRequest, _payload: &mut actix_web::dev::Payload) -> Self::Future {
         let session = req.get_session();
 
         match session.get::<AuthenticatedUser>("auth") {
@@ -92,18 +90,6 @@ impl FromRequest for AuthenticatedUser {
             },
             _ => ready(Err(actix_web::error::ErrorUnauthorized("Not logged in"))),
         }
-        // match (session.get::<String>("email"), session.get::<bool>("admin")) {
-        //     (Ok(Some(email)), Ok(Some(admin))) => { 
-        //         ready(Ok(AuthenticatedUser { email , admin })) 
-        //     },
-        //     (Ok(_), _) | (_, Ok(_)) => {
-        //         // The session is invalid if we get only one of the email and admin fields
-        //         error!("Clearing invalid session");
-        //         session.clear();
-        //         ready(Err(actix_web::error::ErrorUnauthorized("Not logged in")))
-        //     },
-        //     _ => ready(Err(actix_web::error::ErrorUnauthorized("Not logged in"))),
-        // }
     }
 }
 
@@ -220,22 +206,11 @@ async fn verify_token(req: web::Json<AuthRequest>, session: Session, pool: web::
         Ok(g) => g,
         Err(_) => return HttpResponse::Unauthorized().finish(),
     };
-    
-    let expected_hd = std::env::var("ORG_DOMAIN").expect("ORG_DOMAIN envvar is not set");
 
     let Some(email) = payload.email else { 
         error!("No email in Google payload");
         return HttpResponse::InternalServerError().finish();
     };
-    
-    let hd = payload.hd.unwrap_or("".to_owned());
-
-    // Check if user has correct domain, e.g. fysiksektionen.se
-    // This seems a bit unnecesarry now that we check emails in the database
-    if hd != expected_hd {
-        info!("User tried to authenticate with disallowed domain: {}", hd);
-        return HttpResponse::Unauthorized().finish();
-    }
 
     let permission = match check_user_permission(email.clone(), pool).await {
         Ok(Some(permission)) => {permission},
@@ -264,14 +239,6 @@ async fn verify_token(req: web::Json<AuthRequest>, session: Session, pool: web::
 #[get("/api/auth/status")]
 async fn login_status(user: AuthenticatedUser) -> HttpResponse {
     HttpResponse::Ok().json(user)
-    // let email = session.get::<String>("email")?;
-    // dbg!("{}", email.clone().unwrap());
-    // Ok(
-    //     match email {
-    //     Some(email) => {HttpResponse::Ok().json(email)},
-    //     None => {HttpResponse::Unauthorized().finish()},
-    //    }
-    // )
 }
 
 #[post("/api/auth/logout")]
