@@ -10,3 +10,16 @@ diesel::table! {
         filetype -> Text,
     }
 }
+
+diesel::table! {
+    users (id) {
+        id -> Text,
+        email -> Text,
+        admin -> Bool,
+    }
+}
+
+diesel::allow_tables_to_appear_in_same_query!(
+    slides,
+    users,
+);

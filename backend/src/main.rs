@@ -3,6 +3,7 @@ extern crate diesel;
 
 use std::{ fs, future::{ready, Ready}, path::PathBuf};
 
+use actions::check_email_permission;
 use actix_session::{storage::CookieSessionStore, Session, SessionExt, SessionMiddleware};
 use actix_web::{body, cookie::{Cookie, Key}, error::{self, ErrorInternalServerError}, get, http::header::map::Keys, middleware, post, web, App, FromRequest, HttpResponse, HttpServer, Responder};
 use actix_multipart::form::{tempfile::TempFile, MultipartForm, text::Text};
@@ -66,24 +67,43 @@ impl SlideUploadForm {
     }
 }
 
-#[derive(Debug, Serialize)]
-pub struct AuthenticatedUser {
-    pub email: String,
+#[derive(Debug, Serialize, Deserialize)]
+enum PermissionLevel {
+    User,
+    Admin,
 }
 
-impl FromRequest for  AuthenticatedUser {
+#[derive(Debug, Serialize, Deserialize)]
+struct AuthenticatedUser {
+    email: String,
+    permission: PermissionLevel,
+}
+
+impl FromRequest for AuthenticatedUser {
     type Error = actix_web::Error;
     type Future = Ready<Result<Self, Self::Error>>;
 
     fn from_request(req: &actix_web::HttpRequest, payload: &mut actix_web::dev::Payload) -> Self::Future {
         let session = req.get_session();
 
-        match session.get::<String>("email") {
-            Ok(Some(email)) => { 
-                ready(Ok(AuthenticatedUser { email })) 
+        match session.get::<AuthenticatedUser>("auth") {
+            Ok(Some(user)) => {
+                ready(Ok(user)) 
             },
             _ => ready(Err(actix_web::error::ErrorUnauthorized("Not logged in"))),
         }
+        // match (session.get::<String>("email"), session.get::<bool>("admin")) {
+        //     (Ok(Some(email)), Ok(Some(admin))) => { 
+        //         ready(Ok(AuthenticatedUser { email , admin })) 
+        //     },
+        //     (Ok(_), _) | (_, Ok(_)) => {
+        //         // The session is invalid if we get only one of the email and admin fields
+        //         error!("Clearing invalid session");
+        //         session.clear();
+        //         ready(Err(actix_web::error::ErrorUnauthorized("Not logged in")))
+        //     },
+        //     _ => ready(Err(actix_web::error::ErrorUnauthorized("Not logged in"))),
+        // }
     }
 }
 
@@ -193,7 +213,7 @@ async fn get_slides(
 }
 
 #[post("/api/auth/verify")]
-async fn verify_token(req: web::Json<AuthRequest>, session: Session) -> HttpResponse {
+async fn verify_token(req: web::Json<AuthRequest>, session: Session, pool: web::Data<DbPool>) -> HttpResponse {
 
     let client = AsyncClient::new(&req.client_id);
     let payload = match client.validate_id_token(&req.id_token).await {
@@ -201,7 +221,7 @@ async fn verify_token(req: web::Json<AuthRequest>, session: Session) -> HttpResp
         Err(_) => return HttpResponse::Unauthorized().finish(),
     };
     
-    let expexted_hd = std::env::var("ORG_DOMAIN").expect("ORG_DOMAIN envvar is not set");
+    let expected_hd = std::env::var("ORG_DOMAIN").expect("ORG_DOMAIN envvar is not set");
 
     let Some(email) = payload.email else { 
         error!("No email in Google payload");
@@ -211,16 +231,28 @@ async fn verify_token(req: web::Json<AuthRequest>, session: Session) -> HttpResp
     let hd = payload.hd.unwrap_or("".to_owned());
 
     // Check if user has correct domain, e.g. fysiksektionen.se
-    if hd != expexted_hd {
-        info!("User tried to authenticate with wrong domain: {}", hd);
+    // This seems a bit unnecesarry now that we check emails in the database
+    if hd != expected_hd {
+        info!("User tried to authenticate with disallowed domain: {}", hd);
         return HttpResponse::Unauthorized().finish();
     }
 
-    match session.insert("email", &email) {
+    let permission = match check_user_permission(email.clone(), pool).await {
+        Ok(Some(permission)) => {permission},
+        Ok(None) => {return HttpResponse::Unauthorized().finish()},
+        Err(e) => {
+            error!("check_user_permission error: {e}");
+            return HttpResponse::InternalServerError().finish()
+        },
+    };
+
+    let user = AuthenticatedUser { email, permission };
+
+    match session.insert("auth", &user) {
         Ok(()) => {
-            info!("User {} authenticated", email);
+            info!("User {} authenticated", user.email);
             session.renew();
-            HttpResponse::Ok().json(AuthenticatedUser { email })
+            HttpResponse::Ok().json(user)
         },
         Err(e) => {
             error!("{}", e);
@@ -243,13 +275,18 @@ async fn login_status(user: AuthenticatedUser) -> HttpResponse {
 }
 
 #[post("/api/auth/logout")]
-async fn logout(user: AuthenticatedUser, session: Session) -> HttpResponse {
+async fn logout(_: AuthenticatedUser, session: Session) -> HttpResponse {
     session.clear();
     HttpResponse::Ok().finish()
 }
 
-async fn check_uers_permission(payload: GooglePayload) -> bool {
-    todo!()
+async fn check_user_permission(email: String, pool: web::Data<DbPool>) -> actix_web::Result<Option<PermissionLevel>> {
+    web::block(move || {
+        let mut conn = pool.get()?;
+        actions::check_email_permission(&mut conn, &email)
+    })
+    .await?
+    .map_err(error::ErrorInternalServerError)
 }
 
 #[actix_web::main]
