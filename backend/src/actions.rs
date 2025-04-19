@@ -33,7 +33,17 @@ pub fn insert_slide(
 pub fn insert_user(conn: &mut SqliteConnection, user: User) -> Result<User, DbError> {
     use crate::schema::users::dsl::*;
 
-    // Silently ignores users with emails already in the db
+    // Check if the user already exists
+    let existing_user = users
+        .filter(email.eq(user.email.clone()))
+        .first::<User>(conn)
+        .optional()?;
+
+    // If the user already exists, return it instead
+    if let Some(user) = existing_user {
+        return Ok(user);
+    }
+
     diesel::insert_into(users)
         .values(&user)
         .on_conflict(email)
@@ -41,6 +51,15 @@ pub fn insert_user(conn: &mut SqliteConnection, user: User) -> Result<User, DbEr
         .execute(conn)?;
 
     Ok(user)
+}
+
+pub fn remove_user(conn: &mut SqliteConnection, user_id: &str) -> Result<(), DbError> {
+    use crate::schema::users::dsl::*;
+
+    diesel::delete(users.filter(id.eq(user_id)))
+        .execute(conn)?;
+
+    Ok(())
 }
 
 pub fn check_email_permission(conn: &mut SqliteConnection, email_str: &str) -> Result<Option<PermissionLevel>, DbError> {

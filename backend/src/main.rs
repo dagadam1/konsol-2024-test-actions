@@ -115,6 +115,7 @@ async fn main() -> std::io::Result<()> {
             .service(routes::login_status)
             .service(routes::logout)
             .service(routes::add_user)
+            .service(routes::remove_user)
             .service(actix_files::Files::new("/api/screen/slides/images",SLIDE_IMAGE_DIR))
 
             // add route handlers

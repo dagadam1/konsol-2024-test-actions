@@ -137,11 +137,9 @@ struct AddUserRequest {
 }
 
 #[post("/api/auth/add_user")]
-pub(crate) async fn add_user(user_req: web::Json<AddUserRequest>, pool: web::Data<DbPool>) 
+pub(crate) async fn add_user(user_req: web::Json<AddUserRequest>, caller: AuthenticatedUser, pool: web::Data<DbPool>) 
 -> actix_web::Result<HttpResponse> {
     // Check if caller has admin permissions
-    let caller = AuthenticatedUser { email: "aw".to_string(), permission: PermissionLevel::Admin };
-
     if let AuthenticatedUser { permission: PermissionLevel::Admin, .. } = caller {
         // Use web::block to avoid blocking async
         let user = web::block(move || {
@@ -161,6 +159,29 @@ pub(crate) async fn add_user(user_req: web::Json<AddUserRequest>, pool: web::Dat
         }).await?.map_err(error::ErrorInternalServerError)?;
 
         Ok(HttpResponse::Ok().json(user))
+    } else {
+        Ok(HttpResponse::Forbidden().finish())
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct RemoveUserRequest {
+    id: String,
+}
+
+#[post("/api/auth/remove_user")]
+pub(crate) async fn remove_user(user_req: web::Json<RemoveUserRequest>, caller: AuthenticatedUser, pool: web::Data<DbPool>)
+-> actix_web::Result<HttpResponse> {
+    // Check if caller has admin permissions
+    if let AuthenticatedUser { permission: PermissionLevel::Admin, .. } = caller {
+        // Use web::block to avoid blocking async
+        web::block(move || {
+            let mut conn = pool.get()?;
+
+            actions::remove_user(&mut conn, &user_req.id)
+        }).await?.map_err(error::ErrorInternalServerError)?;
+
+        Ok(HttpResponse::Ok().finish())
     } else {
         Ok(HttpResponse::Forbidden().finish())
     }
