@@ -110,7 +110,6 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .service(routes::save_slide)
             .service(routes::get_slides)
-            .service(routes::get_slides)
             .service(routes::verify_token)
             .service(routes::login_status)
             .service(routes::logout)

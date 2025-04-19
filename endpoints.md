@@ -78,8 +78,7 @@ Authenticates a user with a `client_id` and `id_token` from Google OAuth. Only u
 ```json
 {
   "client_id": "string",
-  "id_token": "string:
-}
+  "id_token": "string"
 ```
 
 **Response:**  
