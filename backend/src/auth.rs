@@ -38,16 +38,10 @@ impl FromRequest for AuthenticatedUser {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub(crate) struct AuthRequest {
-    pub(crate) client_id: String,
-    pub(crate) id_token: String,
-}
-
 pub(crate) async fn check_user_permission(email: String, pool: web::Data<DbPool>) -> actix_web::Result<Option<PermissionLevel>> {
     web::block(move || {
         let mut conn = pool.get()?;
-        actions::check_email_permission(&mut conn, &email)
+        actions::check_user(&mut conn, &email)
     })
     .await?
     .map_err(error::ErrorInternalServerError)

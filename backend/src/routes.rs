@@ -32,6 +32,8 @@ use actix_multipart::form::MultipartForm;
 
 use super::DbPool;
 
+// --- Slides ---
+
 #[post("/api/screen/slides/save")]
 pub(crate) async fn save_slide(
     pool: web::Data<DbPool>,
@@ -81,8 +83,16 @@ pub(crate) async fn get_slides(
     Ok(HttpResponse::Ok().json(all_slides))
 }
 
+// --- Authentication ---
+
+#[derive(Serialize, Deserialize, Debug)]
+struct AuthRequest {
+    client_id: String,
+    id_token: String,
+}
+
 #[post("/api/auth/verify")]
-pub(crate) async fn verify_token(req: web::Json<auth::AuthRequest>, session: Session, pool: web::Data<DbPool>) -> HttpResponse {
+pub(crate) async fn verify_token(req: web::Json<AuthRequest>, session: Session, pool: web::Data<DbPool>) -> HttpResponse {
 
     let client = AsyncClient::new(&req.client_id);
     let payload = match client.validate_id_token(&req.id_token).await {
@@ -182,6 +192,23 @@ pub(crate) async fn remove_user(user_req: web::Json<RemoveUserRequest>, caller: 
         }).await?.map_err(error::ErrorInternalServerError)?;
 
         Ok(HttpResponse::Ok().finish())
+    } else {
+        Ok(HttpResponse::Forbidden().finish())
+    }
+}
+
+#[get("/api/auth/list_users")]
+pub(crate) async fn list_users(caller: AuthenticatedUser, pool: web::Data<DbPool>) -> actix_web::Result<HttpResponse> {
+    // Check if caller has admin permissions
+    if let AuthenticatedUser { permission: PermissionLevel::Admin, .. } = caller {
+        // Use web::block to avoid blocking async
+        let users = web::block(move || {
+            let mut conn = pool.get()?;
+
+            actions::get_all_users(&mut conn)
+        }).await?.map_err(error::ErrorInternalServerError)?;
+
+        Ok(HttpResponse::Ok().json(users))
     } else {
         Ok(HttpResponse::Forbidden().finish())
     }

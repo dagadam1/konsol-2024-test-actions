@@ -62,7 +62,17 @@ pub fn remove_user(conn: &mut SqliteConnection, user_id: &str) -> Result<(), DbE
     Ok(())
 }
 
-pub fn check_email_permission(conn: &mut SqliteConnection, email_str: &str) -> Result<Option<PermissionLevel>, DbError> {
+pub fn get_all_users(
+    conn: &mut SqliteConnection,
+) -> Result<Vec<User>, DbError> {
+    use crate::schema::users::dsl::*;
+
+    let all_users = users.load::<User>(conn)?;
+
+    Ok(all_users)
+}
+
+pub fn check_user(conn: &mut SqliteConnection, email_str: &str) -> Result<Option<PermissionLevel>, DbError> {
     use crate::schema::users::dsl::*;
 
     let user = users
