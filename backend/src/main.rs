@@ -81,7 +81,8 @@ async fn main() -> std::io::Result<()> {
     // If SLIDE_IMAGE_DIR does not exist, create it
     if !fs::exists(SLIDE_IMAGE_DIR).expect("Unable to check if slide image directory exists") {
         log::info!("Creating slide image directory at {SLIDE_IMAGE_DIR}");
-        fs::create_dir_all(SLIDE_IMAGE_DIR).expect(&format!("Unable to create slide image directory at {}", SLIDE_IMAGE_DIR));
+        fs::create_dir_all(SLIDE_IMAGE_DIR)
+            .unwrap_or_else(|_| panic!("Unable to create slide image directory at {SLIDE_IMAGE_DIR}"));
     }
 
     log::info!("saving images at {SLIDE_IMAGE_DIR}");
