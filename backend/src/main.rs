@@ -65,7 +65,6 @@ impl SlideUploadForm {
     }
 }
 
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenvy::dotenv().ok();

@@ -30,6 +30,7 @@ pub fn insert_slide(
     Ok(slide)
 }
 
+/// Insert a user into the database and return it
 pub fn insert_user(conn: &mut SqliteConnection, user: User) -> Result<User, DbError> {
     use crate::schema::users::dsl::*;
 
@@ -72,6 +73,8 @@ pub fn get_all_users(
     Ok(all_users)
 }
 
+/// Check a user against the database
+/// Returns None if the user does not exist, otherwise a PermissionLevel
 pub fn check_user(conn: &mut SqliteConnection, email_str: &str) -> Result<Option<PermissionLevel>, DbError> {
     use crate::schema::users::dsl::*;
 

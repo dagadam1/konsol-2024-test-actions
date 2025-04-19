@@ -32,6 +32,10 @@ use actix_multipart::form::MultipartForm;
 
 use super::DbPool;
 
+// For documentation, see endpoints.md
+
+// A route is protected (needs auth) if it has a parameter of type AuthenticatedUser
+
 // --- Slides ---
 
 #[post("/api/screen/slides/save")]
@@ -131,6 +135,7 @@ pub(crate) async fn verify_token(req: web::Json<AuthRequest>, session: Session, 
 
 #[get("/api/auth/status")]
 pub(crate) async fn login_status(user: AuthenticatedUser) -> HttpResponse {
+    // This only runs if the user is authenticated, see AuthenticatedUser
     HttpResponse::Ok().json(user)
 }
 

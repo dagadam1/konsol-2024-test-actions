@@ -22,6 +22,9 @@ pub(crate) struct AuthenticatedUser {
     pub(crate) permission: PermissionLevel,
 }
 
+/// This allows us to extract the AuthenticatedUser from the session
+/// We protect routes by having this as a parameter to our
+/// handles (even if we don't use the data), e.g. see `add_user` and `logout`.
 impl FromRequest for AuthenticatedUser {
     type Error = actix_web::Error;
     type Future = Ready<Result<Self, Self::Error>>;
@@ -38,6 +41,8 @@ impl FromRequest for AuthenticatedUser {
     }
 }
 
+/// Check a user's permission level against the database
+/// Returns None if the user does not exist, otherwise a PermissionLevel
 pub(crate) async fn check_user_permission(email: String, pool: web::Data<DbPool>) -> actix_web::Result<Option<PermissionLevel>> {
     web::block(move || {
         let mut conn = pool.get()?;
