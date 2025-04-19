@@ -1,22 +1,22 @@
 #[macro_use]
 extern crate diesel;
 
-use std::{ fs, future::{ready, Ready}, path::PathBuf};
+use std::fs;
 
-use actix_session::{storage::CookieSessionStore, Session, SessionExt, SessionMiddleware};
-use actix_web::{cookie::Key, error::{self, ErrorInternalServerError}, get, middleware, post, web, App, FromRequest, HttpResponse, HttpServer, Responder};
-use actix_multipart::form::{tempfile::TempFile, MultipartForm, text::Text};
+use actix_session::{storage::CookieSessionStore, SessionMiddleware};
+use actix_web::{cookie::Key, error, middleware, web, App, HttpServer};
+use actix_multipart::form::{tempfile::TempFile, text::Text, MultipartForm};
 use actix_cors::Cors;
 use chrono::{NaiveDate, NaiveTime};
 use diesel::{prelude::*, r2d2};
-use google_oauth::AsyncClient;
-use log::{error, info};
-use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 mod actions;
 mod models;
 mod schema;
+mod fs_helpers;
+mod routes;
+mod auth;
 
 /// Short-hand for the database pool type to use throughout the app.
 type DbPool = r2d2::Pool<r2d2::ConnectionManager<SqliteConnection>>;
@@ -65,196 +65,6 @@ impl SlideUploadForm {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-enum PermissionLevel {
-    User,
-    Admin,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct AuthenticatedUser {
-    email: String,
-    permission: PermissionLevel,
-}
-
-impl FromRequest for AuthenticatedUser {
-    type Error = actix_web::Error;
-    type Future = Ready<Result<Self, Self::Error>>;
-
-    fn from_request(req: &actix_web::HttpRequest, _payload: &mut actix_web::dev::Payload) -> Self::Future {
-        let session = req.get_session();
-
-        match session.get::<AuthenticatedUser>("auth") {
-            Ok(Some(user)) => {
-                ready(Ok(user)) 
-            },
-            _ => ready(Err(actix_web::error::ErrorUnauthorized("Not logged in"))),
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct AuthRequest {
-    client_id: String,
-    id_token: String,
-}
-
-async fn save_image_file(
-    temp_file: TempFile,
-    filename: &str,
-    file_type: &str,
-) -> actix_web::Result<PathBuf> {
-    // The filetype can be determined from the data in the TempFile itself, but since we've already had to determine it earlier,
-    // we can pass it in as an argument instead
-
-    // The file path is the SLIDE_IMAGE_DIR + filename. This is colleted into a PathBuf
-    let mut file_path: PathBuf = [SLIDE_IMAGE_DIR, filename].iter().collect();
-    // The file extension is the filetype
-    file_path.set_extension(file_type);
-
-    let saved_path = file_path.clone(); // We need to clone the path because we want to return it later
-
-    log::info!("Saving image as: {:?}", file_path);
-    
-    // Saving the file is potentially blocking, so we use web::block to offload it to a threadpool
-    // There might be problems if the file is being read somwhere else while it is only partially written.
-    // I don't think we have to worry about it, but it can probably be fixed by writing a temporary file and then moving it once done
-    web::block(move || temp_file.file.persist(file_path))
-    .await?
-    .map_err(|e| {
-        eprintln!("file error: {:?}", e);
-        error::ErrorInternalServerError(e)
-    })?;
-
-    // Return the path to the saved file
-    Ok(saved_path)
-}
-
-async fn remove_file(
-    file_path: PathBuf,
-) -> actix_web::Result<()> {
-    log::info!("Removing file at: {:?}", file_path);
-
-    // Removing the file is potentially blocking, so we use web::block to offload it to a threadpool
-    web::block(move || {
-        std::fs::remove_file(file_path)
-    })
-    .await?
-    .map_err(|e| {
-        eprintln!("file error: {:?}", e);
-        error::ErrorInternalServerError(e)
-    })?;
-
-    Ok(())
-}
-
-#[post("/api/screen/slides/save")]
-async fn save_slide(
-    pool: web::Data<DbPool>,
-    form: MultipartForm<SlideUploadForm>,
-) -> actix_web::Result<impl Responder> {
-    let id = Uuid::new_v4();
-
-    // Parse the form into a Slide and a TempFile (the image)
-    let (slide, image_file) = form.into_inner().parse_form(id).map_err(ErrorInternalServerError)?;
-
-    // Save file to disk
-    let image_path = save_image_file(image_file, &String::from(id), &slide.filetype).await?;
-
-    // Add Slide to database
-    let db_result = web::block(move || {
-        let mut conn = pool.get()?;
-
-        actions::insert_slide(&mut conn, slide)
-    })
-    .await?;
-
-    // Return different responses depending on if the database succeeded or not
-    match db_result {
-        Ok(added_slide) => Ok(HttpResponse::Created().json(added_slide)),
-        Err(e) => {
-            // If the database failed, remove the file from disk
-            remove_file(image_path).await?;
-            // Map the error to an internal server error
-            Err(ErrorInternalServerError(e))
-        }
-    }
-}
-
-#[get("/api/screen/slides")]
-async fn get_slides(
-    pool: web::Data<DbPool>,
-    _: AuthenticatedUser,
-) -> actix_web::Result<impl Responder> {
-    
-    let all_slides = web::block(move || {
-        let mut conn = pool.get()?;
-        actions::get_all_slides(&mut conn)
-    })
-    .await?
-    // map diesel query errors to a 500 error response
-    .map_err(error::ErrorInternalServerError)?;
-    
-    Ok(HttpResponse::Ok().json(all_slides))
-}
-
-#[post("/api/auth/verify")]
-async fn verify_token(req: web::Json<AuthRequest>, session: Session, pool: web::Data<DbPool>) -> HttpResponse {
-
-    let client = AsyncClient::new(&req.client_id);
-    let payload = match client.validate_id_token(&req.id_token).await {
-        Ok(g) => g,
-        Err(_) => return HttpResponse::Unauthorized().finish(),
-    };
-
-    let Some(email) = payload.email else { 
-        error!("No email in Google payload");
-        return HttpResponse::InternalServerError().finish();
-    };
-
-    let permission = match check_user_permission(email.clone(), pool).await {
-        Ok(Some(permission)) => {permission},
-        Ok(None) => {return HttpResponse::Unauthorized().finish()},
-        Err(e) => {
-            error!("check_user_permission error: {e}");
-            return HttpResponse::InternalServerError().finish()
-        },
-    };
-
-    let user = AuthenticatedUser { email, permission };
-
-    match session.insert("auth", &user) {
-        Ok(()) => {
-            info!("User {} authenticated", user.email);
-            session.renew();
-            HttpResponse::Ok().json(user)
-        },
-        Err(e) => {
-            error!("{}", e);
-            HttpResponse::InternalServerError().finish()
-        },
-    }
-}
-
-#[get("/api/auth/status")]
-async fn login_status(user: AuthenticatedUser) -> HttpResponse {
-    HttpResponse::Ok().json(user)
-}
-
-#[post("/api/auth/logout")]
-async fn logout(_: AuthenticatedUser, session: Session) -> HttpResponse {
-    session.clear();
-    HttpResponse::Ok().finish()
-}
-
-async fn check_user_permission(email: String, pool: web::Data<DbPool>) -> actix_web::Result<Option<PermissionLevel>> {
-    web::block(move || {
-        let mut conn = pool.get()?;
-        actions::check_email_permission(&mut conn, &email)
-    })
-    .await?
-    .map_err(error::ErrorInternalServerError)
-}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -298,12 +108,12 @@ async fn main() -> std::io::Result<()> {
                 .build()
                 )
             .wrap(cors)
-            .service(save_slide)
-            .service(get_slides)
-            .service(get_slides)
-            .service(verify_token)
-            .service(login_status)
-            .service(logout)
+            .service(routes::save_slide)
+            .service(routes::get_slides)
+            .service(routes::get_slides)
+            .service(routes::verify_token)
+            .service(routes::login_status)
+            .service(routes::logout)
             .service(actix_files::Files::new("/api/screen/slides/images",SLIDE_IMAGE_DIR))
 
             // add route handlers
@@ -342,8 +152,8 @@ mod tests {
             App::new()
                 .app_data(web::Data::new(pool.clone()))
                 .wrap(middleware::Logger::default())
-                .service(save_slide)
-                .service(get_slides),
+                .service(routes::save_slide)
+                .service(routes::get_slides),
         )
         .await;
 //api/screen/slides/save

@@ -3,7 +3,7 @@ use diesel::prelude::*;
 use crate::models;
 
 use crate::models::User;
-use crate::PermissionLevel;
+use crate::auth::PermissionLevel;
 
 type DbError = Box<dyn std::error::Error + Send + Sync>;
 
