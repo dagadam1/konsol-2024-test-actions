@@ -1,6 +1,8 @@
 use crate::actions;
 use crate::auth;
+use crate::auth::PermissionLevel;
 use crate::fs_helpers;
+use crate::models::User;
 
 use super::auth::check_user_permission;
 
@@ -11,6 +13,8 @@ use actix_web::web;
 use google_oauth::AsyncClient;
 
 use actix_session::Session;
+use serde::Deserialize;
+use serde::Serialize;
 
 use super::auth::AuthenticatedUser;
 
@@ -70,8 +74,7 @@ pub(crate) async fn get_slides(
     let all_slides = web::block(move || {
         let mut conn = pool.get()?;
         actions::get_all_slides(&mut conn)
-    })
-    .await?
+    }).await?
     // map diesel query errors to a 500 error response
     .map_err(error::ErrorInternalServerError)?;
 
@@ -125,4 +128,40 @@ pub(crate) async fn login_status(user: AuthenticatedUser) -> HttpResponse {
 pub(crate) async fn logout(_: AuthenticatedUser, session: Session) -> HttpResponse {
     session.clear();
     HttpResponse::Ok().finish()
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct AddUserRequest {
+    email: String,
+    permission: PermissionLevel,
+}
+
+#[post("/api/auth/add_user")]
+pub(crate) async fn add_user(user_req: web::Json<AddUserRequest>, pool: web::Data<DbPool>) 
+-> actix_web::Result<HttpResponse> {
+    // Check if caller has admin permissions
+    let caller = AuthenticatedUser { email: "aw".to_string(), permission: PermissionLevel::Admin };
+
+    if let AuthenticatedUser { permission: PermissionLevel::Admin, .. } = caller {
+        // Use web::block to avoid blocking async
+        let user = web::block(move || {
+            let mut conn = pool.get()?;
+
+            // Parse AddUserRequest to User
+            let user = User {
+                id: Uuid::new_v4().into(),
+                email: user_req.email.clone(),
+                admin: match user_req.permission {
+                    PermissionLevel::User => false,
+                    PermissionLevel::Admin => true,
+                },
+            };
+
+            actions::insert_user(&mut conn, user)
+        }).await?.map_err(error::ErrorInternalServerError)?;
+
+        Ok(HttpResponse::Ok().json(user))
+    } else {
+        Ok(HttpResponse::Forbidden().finish())
+    }
 }

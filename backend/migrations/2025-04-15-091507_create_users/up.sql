@@ -1,5 +1,5 @@
 CREATE TABLE users (
     id TEXT PRIMARY KEY NOT NULL,
-    email TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
     admin BOOLEAN NOT NULL
 )
