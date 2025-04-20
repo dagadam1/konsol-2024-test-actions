@@ -2,6 +2,7 @@ use diesel::prelude::*;
 use uuid::Uuid;
 
 use crate::models::{self, Slide};
+use diesel::SqliteConnection;
 
 type DbError = Box<dyn std::error::Error + Send + Sync>;
 
@@ -44,4 +45,18 @@ pub fn pop_slide(
         .execute(conn)?;
 
     Ok(slide)
+}
+
+/// Takes an `UpdateSlide` and updates every field that is Some(_)
+pub fn update_slide(
+    conn: &mut SqliteConnection,
+    update_slide: models::UpdateSlide,
+) -> Result<(), DbError> {
+    use crate::schema::slides::dsl::*;
+
+    diesel::update(slides.find(update_slide.id))
+        .set(update_slide)
+        .execute(conn)?;
+
+    Ok(())
 }
