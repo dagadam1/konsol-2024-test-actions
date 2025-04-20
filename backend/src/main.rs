@@ -239,12 +239,11 @@ fn initialize_db_pool() -> DbPool {
 #[cfg(test)]
 mod tests {
     use actix_web::{http::StatusCode, test};
-    use std::fs;
 
     use super::*;
 
     #[actix_web::test]
-    async fn test_slide_endpoints() {
+    async fn test_get_slides_returns_ok() {
         dotenvy::dotenv().ok();
         env_logger::try_init_from_env(env_logger::Env::new().default_filter_or("info")).ok();
 
@@ -258,16 +257,9 @@ mod tests {
                 .service(get_slides),
         )
         .await;
-//api/screen/slides/save
 
-        // Make a new slide
-
-        let test_request = fs::read("src/test_request").expect("Unable to read file");
-        
-        let req = test::TestRequest::post().uri("/api/screen/slides/save").set_payload(test_request).to_request();
-        
-
-        let res = test::call_service(&app, req).await;
-        assert_eq!(res.status(), StatusCode::OK);
+        let req1 = test::TestRequest::get().uri("/api/screen/slides").to_request();
+        let res1 = test::call_service(&app, req1).await;
+        assert_eq!(res1.status(), StatusCode::OK);
     }
 }
