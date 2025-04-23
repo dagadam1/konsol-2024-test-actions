@@ -51,7 +51,7 @@ const Main: React.FC = () => {
         <GoogleLogin 
             onSuccess={credentialResponse => {
                 console.log(credentialResponse);
-                var body: { id_token: any, client_id: any } = { id_token: credentialResponse.credential, client_id: credentialResponse.clientId };
+                var body: { id_token: any } = { id_token: credentialResponse.credential };
                 fetch(`http://localhost:8080/api/auth/verify`, {
                     method: 'POST',
                     credentials: 'include',

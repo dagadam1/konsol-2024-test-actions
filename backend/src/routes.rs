@@ -91,14 +91,15 @@ pub(crate) async fn get_slides(
 
 #[derive(Serialize, Deserialize, Debug)]
 struct AuthRequest {
-    client_id: String,
     id_token: String,
 }
 
 #[post("/api/auth/verify")]
 pub(crate) async fn verify_token(req: web::Json<AuthRequest>, session: Session, pool: web::Data<DbPool>) -> HttpResponse {
 
-    let client = AsyncClient::new(&req.client_id);
+    let client_id = std::env::var("GOOGLE_ID_TOKEN").expect("GOOGLE_ID_TOKEN should be set");
+    
+    let client = AsyncClient::new(&client_id);
     let payload = match client.validate_id_token(&req.id_token).await {
         Ok(g) => g,
         Err(_) => return HttpResponse::Unauthorized().finish(),

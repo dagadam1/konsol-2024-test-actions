@@ -71,14 +71,13 @@ Serves static image files for slides from the directory specified by `SLIDE_IMAG
 ### `POST /api/auth/verify`
 
 **Description:**  
-Authenticates a user with a `client_id` and `id_token` from Google OAuth. Only users with emails in the database table `Users` are allowed to authenticate.
+Authenticates a user with a `client_id` from Google OAuth. Only users with emails in the database table `Users` are allowed to authenticate.
 
 **Request:**  
 - **Body:** JSON object (AuthRequest struct in Actix):
 ```json
 {
   "client_id": "string",
-  "id_token": "string"
 }
 ```
 

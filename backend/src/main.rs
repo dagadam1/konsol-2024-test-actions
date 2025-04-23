@@ -104,7 +104,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(middleware::Logger::default())
             .wrap(
                 SessionMiddleware::builder(CookieSessionStore::default(), secret_key.clone())
-                .cookie_secure(false) //TODO set to false in production
+                .cookie_secure(false) //TODO set to true in production
                 .build()
                 )
             .wrap(cors)
