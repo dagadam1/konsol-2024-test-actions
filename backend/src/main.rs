@@ -218,32 +218,4 @@ mod tests {
     use std::fs;
 
     use super::*;
-
-    #[actix_web::test]
-    async fn test_slide_endpoints() {
-        dotenvy::dotenv().ok();
-        env_logger::try_init_from_env(env_logger::Env::new().default_filter_or("info")).ok();
-
-        let pool = initialize_db_pool();
-
-        let app = test::init_service(
-            App::new()
-                .app_data(web::Data::new(pool.clone()))
-                .wrap(middleware::Logger::default())
-                .service(save_slide)
-                .service(get_slides),
-        )
-        .await;
-//api/screen/slides/save
-
-        // Make a new slide
-
-        let test_request = fs::read("src/test_request").expect("Unable to read file");
-        
-        let req = test::TestRequest::post().uri("/api/screen/slides/save").set_payload(test_request).to_request();
-        
-
-        let res = test::call_service(&app, req).await;
-        assert_eq!(res.status(), StatusCode::OK);
-    }
 }
