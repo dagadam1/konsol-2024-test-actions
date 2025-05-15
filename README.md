@@ -1,9 +1,9 @@
-# konsol-2024
-KONSol is an information screen in Konsulatet. The project contains the page that is shown on the screen, an admin page to upload slides, and a backend written in Actix.
+# konsol-2024 (WIP)
+KONSol is an information screen in Konsulatet. This repo contains the React app that is the screen itself, a React admin page to upload slides, and the backend written in Actix Web.
 
 ## Features:
 - Ability to upload slides (images, title, text, date) that will be shown on the screen.
-- SL departure data.
+- SL timetable data.
 - Fysiksektionen calendar integration.
 
 ## Backend config
