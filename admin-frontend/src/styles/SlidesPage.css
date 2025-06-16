@@ -1,0 +1,18 @@
+.slides-page {
+    flex: 1;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: calc(100% - 70px); /* 70px is header height plus extra padding */
+}
+
+.slides {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    /* justify-content: center; */
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}

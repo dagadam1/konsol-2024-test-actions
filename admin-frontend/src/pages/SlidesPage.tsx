@@ -2,7 +2,7 @@ import React from 'react';
 import { useEffect, useState } from 'react';
 import { SlideData } from '../types';
 import Slide from '../components/Slide';
-import '../styles/SlidePage.css';
+import '../styles/SlidesPage.css';
 
 const SlidesPage: React.FC = () => {
       const [slides, setSlides] = useState<SlideData[]>([]);
@@ -17,7 +17,6 @@ const SlidesPage: React.FC = () => {
 
     return (
         <div className='slides-page'>
-            <h1>Slides</h1>
             <div className='slides'>
                 {slides.map(slide => (
                     <Slide slide={slide} setSlides={setSlides}/>
