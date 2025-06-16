@@ -23,17 +23,6 @@ h1 {
 }
 
 
-.slides {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-}
-
 .slide .slide-header {
     overflow: hidden;
     height: 10em;
@@ -42,8 +31,4 @@ h1 {
 .slide .slide-image {
     width: auto;
     max-width: 100%;
-}
-
-.slides-view {
-    width: 100%;
 }
