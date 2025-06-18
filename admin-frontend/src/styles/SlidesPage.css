@@ -1,9 +1,10 @@
 .slides-page {
     flex: 1;
-    position: absolute;
-    bottom: 0;
+    /* position: absolute; */
+    /* bottom: 0; */
     width: 100%;
-    height: calc(100% - 70px); /* 70px is header height plus extra padding */
+    height: 100%;
+    /* height: calc(100% - 70px); 70px is header height plus extra padding */
 }
 
 .slides {

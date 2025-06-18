@@ -2,12 +2,12 @@
     overflow: hidden;
     background-color: #231F20;
     padding: 10px 10px;
-    position: fixed;
-    height: 50px;
+    /* position: fixed; */
+    /* height: 50px; */
     
-    top: 0;
-    left: 0;
-    width: 100%;
+    /* top: 0;
+    left: 0; */
+    /* width: 100%; */
     text-align: left;
     z-index: 1000;
 }

@@ -1,5 +1,4 @@
 import React from 'react';
-import '../styles/Main.css';
 
 const NewSlide: React.FC = () => {
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {

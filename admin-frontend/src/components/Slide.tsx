@@ -17,17 +17,21 @@ const Slide: React.FC<{ slide: SlideData; setSlides: any}> = ({ slide, setSlides
             }
         });
     }
+
+    const truncateCaption = (caption: string) => {
+        return caption.length > 30 ? caption.substring(0, 30) + '...' : caption;
+    }
+    
     return (
         <div className='slide'>
-            <div className='slide-header'>
-                <img className='slide-image' src={`http://localhost:8080/api/screen/slides/images/${slide.id}.${slide.filetype}`} alt={slide.caption} />  {/*  http://localhost:8080/api/slides/${slide.id} */}
-            </div>
-            <h2>{slide.caption}</h2>
+            <div className={`indicator ${slide.active ? 'active' : 'inactive'}`} />
+            <h2>{ truncateCaption(slide.caption) }</h2>
+            <img className='slide-image' src={`http://localhost:8080/api/screen/slides/images/${slide.id}.${slide.filetype}`} alt={slide.caption} />  {/*  http://localhost:8080/api/slides/${slide.id} */}
             <p>Start Date: {slide.start_date.toString()}</p>
             <p>End Date: {slide.end_date.toString()}</p>
             <p>Active: {slide.active ? 'Yes' : 'No'}</p>
             <p>Filetype: {slide.filetype}</p>
-            <button onClick={handleRemove}>Remove</button>
+            <button className='remove-button' onClick={handleRemove}>X</button>
         </div>
     )
 };
