@@ -1,4 +1,6 @@
 import React from 'react'
+import Popup from 'reactjs-popup';
+import 'reactjs-popup/dist/index.css';
 import { UserData } from '../types'
 import '../styles/User.css'
 
@@ -11,7 +13,15 @@ const User = (props: Props) => {
         <div className='user'>
             <p>{props.userData.email}</p>
             <p>Admin: {props.userData.admin ? 'Yes' : 'No'}</p>
-            <button className = 'delete-button' onClick={() => alert('Delete user functionality not implemented yet')}>Delete</button>
+            <Popup trigger={<button className='remove-user-button'>Remove User</button>} modal>
+                <div className='remove-user-popup'>
+                    <h2>Are you sure you want to remove this user?</h2>
+                    <p>{props.userData.email}</p>
+                    <button className='confirm-remove-button'>Yes, Remove</button>
+                    <button className='cancel-remove-button'>Cancel</button>
+                </div>
+            </Popup>
+
         </div>
   )
 }

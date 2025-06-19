@@ -11,12 +11,24 @@
     text-align: left;
     z-index: 1000;
 }
-.header .logo {
+
+.header .header-left {
+    float: left;
+    height: 100%;
+}
+.header .header-right {
+    float: right;
+    height: 100%;
+    font-size: 0.8rem;
+    text-align: right;
+}
+
+.header .header-left .logo {
     float: left;
     height: 100%;
 }
 
-.header .title {
+.header .header-left .title {
     float: left;
     color: #FFFFFF;
     font-size: 20px;

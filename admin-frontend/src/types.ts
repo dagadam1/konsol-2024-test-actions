@@ -13,4 +13,9 @@ interface UserData {
     admin: boolean;
 }
 
-export type { SlideData, UserData };
+interface User {
+    email: string;
+    permission: 'Admin' | 'User';
+}
+
+export type { SlideData, UserData, User };
