@@ -7,4 +7,10 @@ interface SlideData {
     filetype: string;
 }
 
-export type { SlideData };
+interface UserData {
+    id: string;
+    email: string;
+    admin: boolean;
+}
+
+export type { SlideData, UserData };
