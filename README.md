@@ -27,3 +27,6 @@ See [endpoints](endpoints.md).
 1. Make sure `node` and `npm` are both installed.
 2. Navigate to either `screen-frontend/` or `admin-frontend` and run `npm install`.
 3. Run the frontend with `npm run dev`. (The port will be displayed in the terminal)
+
+### Nix
+If you don't use Nix, you can ignore this and all `*.nix`-files. If you use Nix, this project has a dev shell which can be entered with `nix develop` (if you use flakes) or `nix-shell` (if you don't). After entering the dev shell, run `npm install` to install the Node dependencies, run the migrations, and fill the database according to the instructions above.
