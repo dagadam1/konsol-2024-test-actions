@@ -5,4 +5,6 @@ backend/screen-frontend-build
 backend/slide_images/*
 screen-frontend/node_modules
 screen-frontend/build
+.direnv/
+.envrc
 # admin-frontend has its own .gitignore

@@ -1,3 +1,5 @@
+import { Dispatch, SetStateAction } from "react";
+
 interface SlideData {
     id: string;
     caption: string;
