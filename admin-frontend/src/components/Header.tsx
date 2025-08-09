@@ -1,12 +1,12 @@
-import { GoogleLogin } from '@react-oauth/google';
+import React from 'react';
 import '../styles/Header.css'
-import { useState } from 'react';
 import { User } from '../types';
+import UserStatus from './UserStatus';
 
 
 type Props = {
-  user: User | null;
-  setUser: (user: User | null) => void;
+  user: User | null | undefined;
+  setUser: (user: User | null | undefined) => void;
 }
 
 const Header = (props: Props) => {
@@ -18,38 +18,9 @@ const Header = (props: Props) => {
         <h1 className='title'>Konsol Admin</h1>
       </div>
       <div className="header-right">
-        {user ?
-          <div className='user-info'>
-            <p>{user.email}</p>
-            {user.permission == "Admin" ? <p>Admin</p> : <></>}
-          </div>
-          :<GoogleLogin
-              onSuccess={credentialResponse => {
-                  console.log(credentialResponse);
-                  var body: { id_token: any } = { id_token: credentialResponse.credential };
-                  fetch(`http://localhost:8080/api/auth/verify`, {
-                      method: 'POST',
-                      credentials: 'include',
-                      headers: {
-                          'Content-Type': 'application/json',
-                      },
-        
-                      body: JSON.stringify(body),
-                  }).then(res => {
-                      console.log(res);
-                      res.json().then(body => {
-                          setUser({ email: body.email, permission: body.permission });
-                      })
-                  }).catch(err => {
-                      console.error(err);
-                  });
-              }}
-        
-              onError={() => {
-                  console.log('Login Failed');
-              }}
-              useOneTap/>
-            }
+        <div className="user-status">
+          <UserStatus user={user} setUser={setUser} />
+        </div>
       </div>
 
     </div>

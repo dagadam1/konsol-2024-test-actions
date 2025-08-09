@@ -4,22 +4,45 @@ import NavHeader from './components/NavHeader'
 import SlidesPage from './pages/SlidesPage'
 import './styles/App.css'
 import UsersPage from './pages/UsersPage'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { User } from './types'
+import AccessDeniedPage from './pages/NotAllowedPage'
 
 function App() {
-  const [user, setUser] = useState<User | null>(null);
+  // Undefined if not yet checked, null if checked but not logged in
+  const [user, setUser] = useState<User | null | undefined>(undefined);
+
+  useEffect(() => {
+    // Check if logged in
+    fetch('http://localhost:8080/api/auth/status', {
+      credentials: 'include',
+    })
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error('Not authenticated');
+        }
+      })
+      .then((user) => {
+        console.log('User data:', user);
+        setUser(user);
+      })
+      .catch(() => {
+        setUser(null); // Not logged in
+      });
+  }, []);
 
   return (
     <div className="app-container">
       <Header user={user} setUser={setUser} />
-      <NavHeader />
+      <NavHeader user={user} />
 
 
       <Routes>
         <Route path="/" element={<SlidesPage />} />
         <Route path="/slides" element={<SlidesPage />} />
-        <Route path="/users" element={<UsersPage />} />
+        <Route path="/users" element={user?.permission === 'Admin' ? <UsersPage /> : <AccessDeniedPage />} />
       </Routes>
     </div>
   )
