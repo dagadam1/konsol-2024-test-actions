@@ -1,6 +1,7 @@
 import React from 'react';
 import { SlideData } from '../types';
 import '../styles/Slide.css';
+import { updateSlides } from '../util/utils';
 
 const Slide: React.FC<{ slide: SlideData; setSlides: any}> = ({ slide, setSlides }) => {
     const handleRemove = () => {
@@ -9,8 +10,7 @@ const Slide: React.FC<{ slide: SlideData; setSlides: any}> = ({ slide, setSlides
         }).then(response => {
             if (response.ok) {
                 console.log('Slide removed successfully');
-                // Remove this slide from the slide_array
-                setSlides((prevSlides: SlideData[]) => prevSlides.filter(s => s.id !== slide.id));
+                updateSlides(setSlides); // Refresh slides
             } else {
                 console.log('Failed to remove slide');
             }
