@@ -5,8 +5,7 @@ type Props = {}
 const AccessDeniedPage = (props: Props) => {
   return (
     <div className="access-denied-page">
-      <h1>Access Denied</h1>
-      <p>:(</p>
+      <p style={{ textAlign: 'center' }}>You do not have permission to view this page.</p>
     </div>
   )
 }

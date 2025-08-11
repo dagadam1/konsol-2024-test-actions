@@ -6,7 +6,9 @@ import './styles/App.css'
 import UsersPage from './pages/UsersPage'
 import { useEffect, useState } from 'react'
 import { User } from './types'
-import AccessDeniedPage from './pages/NotAllowedPage'
+import AccessDeniedPage from './pages/AccessDeniedPage'
+import LoadingPage from './pages/LoadingPage'
+import NotLoggedInPage from './pages/NotLoggedInPage'
 
 function App() {
   // Undefined if not yet checked, null if checked but not logged in
@@ -38,12 +40,18 @@ function App() {
       <Header user={user} setUser={setUser} />
       <NavHeader user={user} />
 
-
+      {
+      // Session check (see useEffect) in progress
+      user === undefined ? <LoadingPage /> :
+      // User check finished, not logged in
+      user === null ? <NotLoggedInPage /> :
+      // User check finished, logged in
       <Routes>
         <Route path="/" element={<SlidesPage />} />
         <Route path="/slides" element={<SlidesPage />} />
         <Route path="/users" element={user?.permission === 'Admin' ? <UsersPage /> : <AccessDeniedPage />} />
       </Routes>
+      }
     </div>
   )
 }
