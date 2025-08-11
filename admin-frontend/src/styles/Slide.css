@@ -77,7 +77,7 @@ h1 {
 }
 
 .slide .indicator.active {
-    background-color: red;
+    background-color: green;
 }
 
 .slide .indicator.inactive {
