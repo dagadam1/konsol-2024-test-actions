@@ -23,7 +23,7 @@ const SlidesPage = () => {
 
         console.log(data);
 
-        fetch('http://localhost:8080/api/screen/slides/save', {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/screen/slides/save`, {
             method: 'POST',
             body: data
         }).then(response => {

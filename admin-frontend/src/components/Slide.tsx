@@ -4,7 +4,7 @@ import '../styles/Slide.css';
 
 const Slide: React.FC<{ slide: SlideData; setSlides: any}> = ({ slide, setSlides }) => {
     const handleRemove = () => {
-        fetch(`http://localhost:8080/api/screen/slides/${slide.id}`, {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/screen/slides/${slide.id}`, {
             method: 'DELETE'
         }).then(response => {
             if (response.ok) {
@@ -25,7 +25,7 @@ const Slide: React.FC<{ slide: SlideData; setSlides: any}> = ({ slide, setSlides
         <div className='slide'>
             <div className={`indicator ${slide.active ? 'active' : 'inactive'}`} />
             <h2>{ truncateCaption(slide.caption) }</h2>
-            <img className='slide-image' src={`http://localhost:8080/api/screen/slides/images/${slide.id}.${slide.filetype}`} alt={slide.caption} />  {/*  http://localhost:8080/api/slides/${slide.id} */}
+            <img className='slide-image' src={`${import.meta.env.VITE_API_BASE_URL}/api/screen/slides/images/${slide.id}.${slide.filetype}`} alt={slide.caption} />  {/*  http://localhost:8080/api/slides/${slide.id} */}
             <p>
                 {new Date(slide.start_date).toLocaleString()} &ndash; {new Date(slide.end_date).toLocaleString()}
             </p>

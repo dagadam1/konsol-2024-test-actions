@@ -10,7 +10,7 @@ type Props = {
 const UserStatus = ({ user, setUser }: Props) => {
 
     const logout = () => {
-        fetch('http://localhost:8080/api/auth/logout', {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/logout`, {
             method: 'POST',
             credentials: 'include',
         }).then(() => {
@@ -26,7 +26,7 @@ const UserStatus = ({ user, setUser }: Props) => {
         return <GoogleLogin
             onSuccess={credentialResponse => {
                 var body: { id_token: any } = { id_token: credentialResponse.credential };
-                fetch(`http://localhost:8080/api/auth/verify`, {
+                fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/verify`, {
                     method: 'POST',
                     credentials: 'include',
                     headers: {

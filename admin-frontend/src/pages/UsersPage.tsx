@@ -11,7 +11,7 @@ const UsersPage = (props: Props) => {
     const [users, setUsers] = useState<UserData[]>([]);
 
     useEffect(() => {
-        fetch('http://localhost:8080/api/auth/list_users', {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/list_users`, {
             method: 'GET',
             credentials: 'include'
         })
@@ -34,7 +34,7 @@ const UsersPage = (props: Props) => {
 
       const newUser = { email, permission: admin ? 'Admin' : 'User' };
 
-      fetch('http://localhost:8080/api/auth/add_user', {
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/add_user`, {
           method: 'POST',
           credentials: 'include',
           headers: {

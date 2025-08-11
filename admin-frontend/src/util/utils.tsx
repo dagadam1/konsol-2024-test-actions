@@ -1,5 +1,5 @@
 export const updateSlides = (setSlides: (slides: any) => void) => {
-    fetch('http://localhost:8080/api/screen/slides', {
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/api/screen/slides`, {
             method: 'GET',
             credentials: 'include'
         })
