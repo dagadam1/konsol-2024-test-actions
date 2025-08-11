@@ -46,21 +46,21 @@ const SlidesPage = () => {
         <div className='slides-page'>
             <div className="slides-header">
                 <h1>Slides</h1>
-                <Popup trigger={<button className='add-slide-button'>Add Slide</button>} modal>
-                    <form onSubmit={(event) => handleAddSlide(event)}>
-                        <button type='submit'>Submit</button>
-                        <label htmlFor='caption'>Caption</label>
-                        <input type='text' id='caption' name='caption' />
-                        <label htmlFor='startDate'>Start Date</label>
-                        <input type='date' id='startDate' name='start' />
-                        <label htmlFor='endDate'>End Date</label>
-                        <input type='date' id='endDate' name='end' />
-                        <label htmlFor='active'>Active</label>
-                        <input type='checkbox' id='active' name='visible' value='true' />
-                        <label htmlFor='file'>File</label>
-                        <input type='file' id='file' name='imageFile' />
-
-                    </form>
+                <Popup className="add-slide-popup" trigger={<button className='add-slide-button'>Add Slide</button>} modal>   
+                        <h2>Add Slide</h2>
+                        <form onSubmit={(event) => handleAddSlide(event)}>
+                            <label htmlFor='caption'>Caption</label>
+                            <input type='text' id='caption' name='caption' />
+                            <label htmlFor='startDate'>Start Date</label>
+                            <input type='date' id='startDate' name='start' />
+                            <label htmlFor='endDate'>End Date</label>
+                            <input type='date' id='endDate' name='end' />
+                            {/* <label htmlFor='active'>Active</label>
+                            <input type='checkbox' id='active' name='visible' value='true' /> */}
+                            <label htmlFor='file'>Image</label>
+                            <input type='file' id='file' name='imageFile' />
+                            <button type='submit'>Submit</button>
+                        </form>
                 </Popup>
 
             </div>

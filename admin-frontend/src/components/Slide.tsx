@@ -27,10 +27,9 @@ const Slide: React.FC<{ slide: SlideData; setSlides: any}> = ({ slide, setSlides
             <div className={`indicator ${slide.active ? 'active' : 'inactive'}`} />
             <h2>{ truncateCaption(slide.caption) }</h2>
             <img className='slide-image' src={`http://localhost:8080/api/screen/slides/images/${slide.id}.${slide.filetype}`} alt={slide.caption} />  {/*  http://localhost:8080/api/slides/${slide.id} */}
-            <p>Start Date: {slide.start_date.toString()}</p>
-            <p>End Date: {slide.end_date.toString()}</p>
-            <p>Active: {slide.active ? 'Yes' : 'No'}</p>
-            <p>Filetype: {slide.filetype}</p>
+            <p>
+                {new Date(slide.start_date).toLocaleString()} &ndash; {new Date(slide.end_date).toLocaleString()}
+            </p>
             <button className='remove-button' onClick={handleRemove}>X</button>
         </div>
     )

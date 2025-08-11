@@ -55,8 +55,7 @@ const UsersPage = (props: Props) => {
 
       <div className="users-header">
         <h1>Users</h1>
-        <Popup trigger={<button className='add-user-button'>Add User</button>} modal>
-          <div className='add-user-popup'>
+        <Popup className="add-user-popup" trigger={<button className='add-user-button'>Add User</button>} modal>
             <h2>Add User</h2>
             <form onSubmit={(event) => handleAddUser(event)}>
               <label>Email:</label>
@@ -65,7 +64,6 @@ const UsersPage = (props: Props) => {
               <input type="checkbox" name="admin" />
               <button type="submit">Submit</button>
             </form>
-          </div>
         </Popup>
 
       </div>

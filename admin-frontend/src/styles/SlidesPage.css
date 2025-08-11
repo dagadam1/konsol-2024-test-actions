@@ -31,3 +31,11 @@
     color: white;
     font-size: 1.5rem;
 }
+
+/* If the classes here seem weird, check out https://react-popup.elazizi.com/css-styling/ */
+.add-slide-popup-overlay .add-slide-popup-content {
+  color: white;
+  background-color: #231F20;
+  border-radius: 4px;
+  text-align: center;
+}
