@@ -4,6 +4,7 @@ import 'reactjs-popup/dist/index.css';
 import User from '../components/User';
 import { UserData } from '../types';
 import '../styles/UsersPage.css';
+import { updateUsers } from '../util/utils';
 
 type Props = {}
 
@@ -11,13 +12,7 @@ const UsersPage = (props: Props) => {
     const [users, setUsers] = useState<UserData[]>([]);
 
     useEffect(() => {
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/list_users`, {
-            method: 'GET',
-            credentials: 'include'
-        })
-            .then(response => response.json())
-            .then(json => setUsers(json));
-        // setUsers([{ id: 'dummy-id', email: 'user1@example.com', admin: true }, { id: 'dummy-id2', email: 'user2@example.com', admin: false }, { id: 'dummy-id3', email: 'user3@example.com', admin: true }]);
+      updateUsers(setUsers);
     }, []);
 
     const handleAddUser = (event: React.FormEvent<HTMLFormElement>) => {
@@ -48,7 +43,7 @@ const UsersPage = (props: Props) => {
           return response.json();
         }).then(addedUser => {
           console.log('Added user:', addedUser);
-          setUsers([...users, addedUser]);
+          updateUsers(setUsers); // Refresh users
         });
       }
 
@@ -70,7 +65,7 @@ const UsersPage = (props: Props) => {
         </Popup>
 
       </div>
-      {users.map(user => <User userData = {user} key={user.id} />)}  
+      {users.map(user => <User userData = {user} users={users} setUsers={setUsers} key={user.id} />)}  
     </div>
   )
 }
