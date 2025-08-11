@@ -12,7 +12,7 @@ const User = (props: Props) => {
     return (
         <div className='user'>
             <p>{props.userData.email}</p>
-            <p>Admin: {props.userData.admin ? 'Yes' : 'No'}</p>
+            <p>{props.userData.admin ? 'Admin' : 'Not admin'}</p>
             <Popup trigger={<button className='remove-user-button'>Remove User</button>} modal>
                 <div className='remove-user-popup'>
                     <h2>Are you sure you want to remove this user?</h2>

@@ -11,7 +11,10 @@ const UsersPage = (props: Props) => {
     const [users, setUsers] = useState<UserData[]>([]);
 
     useEffect(() => {
-        fetch('http://localhost:8080/api/auth/list_users')
+        fetch('http://localhost:8080/api/auth/list_users', {
+            method: 'GET',
+            credentials: 'include'
+        })
             .then(response => response.json())
             .then(json => setUsers(json));
         // setUsers([{ id: 'dummy-id', email: 'user1@example.com', admin: true }, { id: 'dummy-id2', email: 'user2@example.com', admin: false }, { id: 'dummy-id3', email: 'user3@example.com', admin: true }]);
@@ -34,6 +37,7 @@ const UsersPage = (props: Props) => {
 
       fetch('http://localhost:8080/api/auth/add_user', {
           method: 'POST',
+          credentials: 'include',
           headers: {
               'Content-Type': 'application/json',
           },
