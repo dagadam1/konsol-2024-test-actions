@@ -8,9 +8,8 @@ const Slide: React.FC<{ slide: SlideData; setSlides: any}> = ({ slide, setSlides
             method: 'DELETE'
         }).then(response => {
             if (response.ok) {
-                console.log('Slide removed');
+                console.log('Slide removed successfully');
                 // Remove this slide from the slide_array
-                console.log("removing")
                 setSlides((prevSlides: SlideData[]) => prevSlides.filter(s => s.id !== slide.id));
             } else {
                 console.log('Failed to remove slide');

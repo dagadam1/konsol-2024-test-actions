@@ -17,7 +17,6 @@ const SlidesPage = () => {
             .then(response => response.json())
             .then(json => setSlides(json));
         // setSlides([{ id: 'dummy-id', caption: 'Dummy Slide', start_date: new Date(), end_date: new Date(), active: true, filetype: 'image/png' }, { id: 'dummy-id2', caption: 'Dummy Slide', start_date: new Date(), end_date: new Date(), active: true, filetype: 'image/png' }, { id: 'dummy-id3', caption: 'Dummy Slide', start_date: new Date(), end_date: new Date(), active: true, filetype: 'image/png' }]);
-        console.log(slides);
     }, []);
 
     const handleAddSlide = (event: React.FormEvent<HTMLFormElement>) => {

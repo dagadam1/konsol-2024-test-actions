@@ -25,7 +25,6 @@ const UserStatus = ({ user, setUser }: Props) => {
     } else if (user === null) {
         return <GoogleLogin
             onSuccess={credentialResponse => {
-                console.log(credentialResponse);
                 var body: { id_token: any } = { id_token: credentialResponse.credential };
                 fetch(`http://localhost:8080/api/auth/verify`, {
                     method: 'POST',
@@ -36,8 +35,8 @@ const UserStatus = ({ user, setUser }: Props) => {
 
                     body: JSON.stringify(body),
                 }).then(res => {
-                    console.log(res);
                     res.json().then(body => {
+                        console.log('Login successful');
                         setUser({ email: body.email, permission: body.permission });
                     })
                 }).catch(err => {

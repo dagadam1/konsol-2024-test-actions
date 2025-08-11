@@ -8,17 +8,15 @@ const NewSlide: React.FC = () => {
         // Visible is an empty string if the checkbox is not checked; we want it to be false instead
         data.set('visible', data.get('visible') || 'false');
 
-        console.log(data);
-
         fetch('http://localhost:8080/api/screen/slides/save', {
             method: 'POST',
             body: data
         }).then(response => {
             if (response.ok) {
-                console.log('Slide saved');
+                console.log('Slide uploaded');
                 //TODO update slides when a new slide is added
             } else {
-                console.log('Failed to save slide');
+                console.log('Failed to upload slide');
             }
         });
     }

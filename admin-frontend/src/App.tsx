@@ -27,7 +27,6 @@ function App() {
         }
       })
       .then((user) => {
-        console.log('User data:', user);
         setUser(user);
       })
       .catch(() => {

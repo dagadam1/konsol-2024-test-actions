@@ -18,7 +18,6 @@ const UsersPage = (props: Props) => {
             .then(response => response.json())
             .then(json => setUsers(json));
         // setUsers([{ id: 'dummy-id', email: 'user1@example.com', admin: true }, { id: 'dummy-id2', email: 'user2@example.com', admin: false }, { id: 'dummy-id3', email: 'user3@example.com', admin: true }]);
-        console.log(users);
     }, []);
 
     const handleAddUser = (event: React.FormEvent<HTMLFormElement>) => {
