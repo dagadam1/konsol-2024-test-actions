@@ -65,7 +65,7 @@ const UsersPage = (props: Props) => {
         </Popup>
 
       </div>
-      {users.map(user => <User userData = {user} users={users} setUsers={setUsers} key={user.id} />)}  
+      {users.map(user => <User userData = {user} setUsers={setUsers} key={user.id} />)}  
     </div>
   )
 }

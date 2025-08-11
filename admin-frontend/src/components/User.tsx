@@ -7,11 +7,10 @@ import { updateUsers } from '../util/utils';
 
 type Props = {
     userData: UserData
-    users: UserData[];
     setUsers: (users: UserData[]) => void;
 }
 
-const User = ({ userData, users, setUsers }: Props) => {
+const User = ({ userData, setUsers }: Props) => {
     const handleRemove = () => {
         if (!window.confirm(`Are you sure you want to remove user ${userData.email}?`)) {
             return;
