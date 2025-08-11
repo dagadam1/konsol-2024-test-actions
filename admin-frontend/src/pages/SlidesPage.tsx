@@ -4,19 +4,14 @@ import { SlideData } from '../types';
 import Slide from '../components/Slide';
 import '../styles/SlidesPage.css';
 import Popup from 'reactjs-popup';
+import { updateSlides } from '../util/utils';
 
 const SlidesPage = () => {
 
     const [slides, setSlides] = useState<SlideData[]>([]);
 
     useEffect(() => {
-        fetch('http://localhost:8080/api/screen/slides', {
-            method: 'GET',
-            credentials: 'include'
-        })
-            .then(response => response.json())
-            .then(json => setSlides(json));
-        // setSlides([{ id: 'dummy-id', caption: 'Dummy Slide', start_date: new Date(), end_date: new Date(), active: true, filetype: 'image/png' }, { id: 'dummy-id2', caption: 'Dummy Slide', start_date: new Date(), end_date: new Date(), active: true, filetype: 'image/png' }, { id: 'dummy-id3', caption: 'Dummy Slide', start_date: new Date(), end_date: new Date(), active: true, filetype: 'image/png' }]);
+        updateSlides(setSlides);
     }, []);
 
     const handleAddSlide = (event: React.FormEvent<HTMLFormElement>) => {
@@ -33,10 +28,11 @@ const SlidesPage = () => {
             body: data
         }).then(response => {
             if (response.ok) {
-                console.log('Slide saved');
-                //TODO update slides when a new slide is added
+                console.log('Slide uploaded successfully');
+                updateSlides(setSlides); // Refresh slides
+                // TODO: close popup. Or maybe remove submit button?
             } else {
-                console.log('Failed to save slide');
+                console.log('Failed to upload slide');
             }
         });
     };
