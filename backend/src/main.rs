@@ -23,7 +23,7 @@ type DbPool = r2d2::Pool<r2d2::ConnectionManager<SqliteConnection>>;
 
 // The directory where slide images are saved. Will be created if it does not exist. This whole directory gets served as static files.
 // No trailing slash
-const SLIDE_IMAGE_DIR: &str = "/tmp/konsol_slides";
+const SLIDE_IMAGE_DIR: &str = "./slide_images";
 
 #[derive(Debug, MultipartForm)]
 struct SlideUploadForm {
@@ -139,7 +139,27 @@ fn initialize_db_pool() -> DbPool {
 #[cfg(test)]
 mod tests {
     use actix_web::{http::StatusCode, test};
-    use std::fs;
 
     use super::*;
+
+    #[actix_web::test]
+    async fn test_get_slides_returns_ok() {
+        dotenvy::dotenv().ok();
+        env_logger::try_init_from_env(env_logger::Env::new().default_filter_or("info")).ok();
+
+        let pool = initialize_db_pool();
+
+        let app = test::init_service(
+            App::new()
+                .app_data(web::Data::new(pool.clone()))
+                .wrap(middleware::Logger::default())
+                .service(routes::save_slide)
+                .service(routes::get_slides),
+        )
+        .await;
+
+        let req1 = test::TestRequest::get().uri("/api/screen/slides").to_request();
+        let res1 = test::call_service(&app, req1).await;
+        assert_eq!(res1.status(), StatusCode::OK);
+    }
 }

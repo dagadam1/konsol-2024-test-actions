@@ -4,7 +4,7 @@ import '../styles/Slide.css';
 
 const Slide: React.FC<{ slide: SlideData }> = ({ slide }) => {
     const handleRemove = () => {
-        fetch(`http://localhost:8080/api/slides/${slide.id}`, {
+        fetch(`http://localhost:8080/api/screen/slides/${slide.id}`, {
             method: 'DELETE'
         }).then(response => {
             if (response.ok) {
