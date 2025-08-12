@@ -1,5 +1,3 @@
-import { UserData } from "../types";
-
 import { UserData, SlideData } from "../types";
 
 export const updateSlides = (setSlides: (slides: SlideData[]) => void) => {

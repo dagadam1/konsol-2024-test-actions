@@ -25,7 +25,7 @@ const UserStatus = ({ user, setUser }: Props) => {
     } else if (user === null) {
         return <GoogleLogin
             onSuccess={credentialResponse => {
-                var body: { id_token: any } = { id_token: credentialResponse.credential };
+                const body: { id_token: string } = { id_token: credentialResponse.credential as string };
                 fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/verify`, {
                     method: 'POST',
                     credentials: 'include',

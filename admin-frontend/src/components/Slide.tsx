@@ -3,7 +3,12 @@ import { SlideData } from '../types';
 import '../styles/Slide.css';
 import { updateSlides } from '../util/utils';
 
-const Slide: React.FC<{ slide: SlideData; setSlides: any}> = ({ slide, setSlides }) => {
+type Props = {
+    slide: SlideData;
+    setSlides: (slides: SlideData[]) => void;
+}
+
+const Slide = ({ slide, setSlides }: Props) => {
     const handleRemove = () => {
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/screen/slides/${slide.id}`, {
             method: 'DELETE'
