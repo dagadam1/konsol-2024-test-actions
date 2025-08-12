@@ -1,6 +1,8 @@
 import { UserData } from "../types";
 
-export const updateSlides = (setSlides: (slides: any) => void) => {
+import { UserData, SlideData } from "../types";
+
+export const updateSlides = (setSlides: (slides: SlideData[]) => void) => {
     fetch(`${import.meta.env.VITE_API_BASE_URL}/api/screen/slides`, {
         method: 'GET',
         credentials: 'include'
