@@ -61,7 +61,7 @@ const SlidesPage = () => {
             </div>
             <div className='slides'>
                 {slides.map(slide => (
-                    <Slide slide={slide} setSlides={setSlides} />
+                    <Slide key={slide.id} slide={slide} setSlides={setSlides} />
                 ))}
             </div>
         </div>
