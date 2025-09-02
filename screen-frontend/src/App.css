@@ -11,6 +11,13 @@
 }
 
 
+.large-text {
+  font-size: 16px;
+  line-height: 16px;
+  display: inline;
+}
+
+
 .left {
   grid-column: 1;
   display: flex;
@@ -22,14 +29,20 @@
 .right {
   grid-column: 2;
   display: grid;
-  grid-template-rows: 1fr 1fr;
+  grid-template-rows: auto 1fr 1fr;
   height: 100vh;
 
   border-left: 0.1vw solid #646cff;
 }
 
-.sl {
-  border-bottom: 0.1vw solid #646cff;
+.last-update {
+  height: fit-content;
+  grid-row: 1;
+}
+
+.sl-departure-list {
+  grid-row: 2;
+  overflow: hidden;
 }
 
 .calendar-placeholder {

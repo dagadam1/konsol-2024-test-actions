@@ -95,6 +95,9 @@ const departure_schema = z.object({
     })
 });
 
+/**
+ * Parses a JSON object fetched via the SL API into an {@link SlDeparture} object
+ */
 function parse_departure(json: object, site_id: number): SlDeparture {
     const parse_result = departure_schema.safeParse(json);
     if (parse_result.success) {
@@ -133,5 +136,5 @@ function parse_departure(json: object, site_id: number): SlDeparture {
     }
 }
 
-export type { SlTrackedLine, SlTrackedSite, SlDepartureState, SlDeparture };
-export { SlTransportMode, SlLineGroup, parse_departure }
+export type {SlTrackedLine, SlTrackedSite, SlDepartureState, SlDeparture};
+export {SlTransportMode, SlLineGroup, parse_departure}

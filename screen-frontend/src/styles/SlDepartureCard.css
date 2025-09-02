@@ -1,0 +1,52 @@
+:root {
+    --color-dark-gray: #333;
+    --color-white: #fff;
+
+    overflow: hidden;
+}
+
+* {
+    margin: 0;
+}
+
+.sl-stop-point-name {
+    display: flex;
+}
+
+.sl-departure {
+    display: grid;
+    grid-template-columns: 10fr 2fr 1fr;
+    margin-bottom: 4px;
+    border: solid #ffffff 1px;
+}
+
+.sl-departure-left {
+    grid-column: 1;
+    height: 3em;
+    align-items: center;
+}
+
+.sl-line-badge {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 5vw;
+}
+
+.sl-line-number {
+    align-self: center;
+}
+
+.sl-destination {
+    display: flex;
+}
+
+.sl-departure-middle {
+    grid-column: 2;
+    display: flex;
+}
+
+.sl-departure-right {
+    grid-column: 3;
+    display: flex;
+}
