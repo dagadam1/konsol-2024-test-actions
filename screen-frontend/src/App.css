@@ -32,3 +32,12 @@
   border-bottom: 0.1vw solid #646cff;
 }
 
+.calendar-placeholder {
+  grid-row: 3;
+}
+
+.calendar-frame {
+  filter: invert(1) hue-rotate(180deg);
+  background-color: #00000000;
+  padding: 10px;
+}
