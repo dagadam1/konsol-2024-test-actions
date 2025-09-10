@@ -74,7 +74,6 @@ pub(crate) async fn save_slide(
 #[get("/api/screen/slides")]
 pub(crate) async fn get_slides(
     pool: web::Data<DbPool>,
-    _: auth::AuthenticatedUser,
 ) -> actix_web::Result<impl Responder> {
 
     let all_slides = web::block(move || {
