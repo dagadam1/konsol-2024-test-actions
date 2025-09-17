@@ -17,12 +17,14 @@ const SlDepartureCard: React.FC<{ departure: SlDeparture }> = ({ departure }) =>
 
     return (
         <div className="sl-departure">
-            <p className="sl-stop-point-name"><i>{departure.stop_point_name}</i></p>
             <div className="sl-departure-left">
-                <SlLineBadge mode={departure.transport_mode} line_group={departure.line_group} line_designation={departure.line_designation}/>
-                <p className="sl-destination">{departure.destination + (departure.via ? ` (via ${departure.via})` : "")}</p>
+                <p className="sl-stop-point-name">{"från: " + departure.stop_point_name}</p>
+                <p className="sl-destination">{"till: " + departure.destination + (departure.via ? ` (via ${departure.via})` : "")}</p>
             </div>
             <div className="sl-departure-middle">
+                <SlLineBadge mode={departure.transport_mode} line_group={departure.line_group} line_designation={departure.line_designation}/>
+            </div>
+            <div className="sl-departure-middle-right">
                 <p className="sl-display-time large-text">{departure.display_time}</p>
             </div>
             <div className="sl-departure-right">

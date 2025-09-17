@@ -9,15 +9,21 @@
     margin: 0;
 }
 
+p {
+    font-size: 1vw;
+    font-style: normal;
+}
+
 .sl-stop-point-name {
     display: flex;
 }
 
 .sl-departure {
     display: grid;
-    grid-template-columns: 10fr 2fr 1fr;
-    margin-bottom: 4px;
-    border: solid #ffffff 1px;
+    grid-template-columns: 8fr 2fr 2fr 1fr;
+    margin: 1%;
+    border: solid #ffffff 0.1vw ;
+    border-radius: 0.2vw;
 }
 
 .sl-departure-left {
@@ -30,23 +36,28 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    width: 5vw;
+    height: 4vw;
 }
 
 .sl-line-number {
     align-self: center;
 }
 
-.sl-destination {
-    display: flex;
+.sl-departure>* {
+    margin: auto;
 }
 
-.sl-departure-middle {
-    grid-column: 2;
+.sl-departure-left {
+    grid-column: 1;
     display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-evenly;
+    height: 100%;
+    margin: 0;
 }
 
-.sl-departure-right {
-    grid-column: 3;
-    display: flex;
+.sl-departure-left p {
+    padding-left: 0.2vw;
+    
 }
