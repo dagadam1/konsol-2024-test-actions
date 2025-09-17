@@ -1,8 +1,10 @@
 #root {
   display: grid;
-  grid-template-columns: 3fr 2fr;
-  margin: 0 auto;
+  grid-template-columns: 6fr 2fr;
+  margin: 0;
   padding: 0;
+  border: #ff642b 0.5vw solid;
+  width: 100vw;
   text-align: center;
 }
 
@@ -31,7 +33,7 @@
   display: grid;
   grid-template-rows: auto 1fr 1fr;
   height: 100vh;
-
+  width: 100%;
   border-left: 0.1vw solid #646cff;
 }
 
@@ -45,12 +47,13 @@
   overflow: hidden;
 }
 
-.calendar-placeholder {
+/* .calendar-placeholder {
   grid-row: 3;
-}
+} */
 
 .calendar-frame {
   filter: invert(1) hue-rotate(180deg);
   background-color: #00000000;
-  padding: 10px;
+  width: auto;
+  height: 100%;
 }
