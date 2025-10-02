@@ -1,5 +1,3 @@
-import { Dispatch, SetStateAction } from "react";
-
 interface SlideData {
     id: string;
     caption: string;
@@ -8,6 +6,5 @@ interface SlideData {
     active: boolean;
     filetype: string;
 }
-
 
 export type { SlideData };

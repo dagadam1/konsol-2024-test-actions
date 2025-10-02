@@ -1,52 +1,7 @@
 import { z } from "zod";
 
-enum SlTransportMode {
-    Train = "TRAIN",    // Pendeltåg
-    Metro = "METRO",    // Röda, gröna, blå linjen
-    Bus = "BUS",        // Röd buss, blå buss
-    Tram = "TRAM",      // Spårväg city, Roslagsbanan etc.
-    Ferry = "FERRY",
-    Ship = "SHIP",
-    Taxi = "TAXI",
-}
-
-enum SlLineGroup {
-    Train = "Pendeltåg",
-    RedMetro = "Tunnelbanans röda linje",
-    GreenMetro = "Tunnelbanans gröna linje",
-    BlueMetro = "Tunnelbanans blå linje",
-    Bus = "Buss",
-    BlueBus = "Blåbuss",
-    CityLine = "Spårväg City",
-    RoslagenLine = "Roslagsbanan",
-}
-
-interface SlTrackedLine {
-    transport_mode: SlTransportMode,
-    line_id: number,
-    direction_code: number | undefined, // if undefined, track all directions
-}
-
-interface SlTrackedSite {
-    site_id: number, // can be found via https://www.trafiklab.se/api/trafiklab-apis/sl/stop-lookup (generally last 4 digits of SiteId)
-    tracked_lines: SlTrackedLine[] | undefined, // if undefined, track all departures from a given site
-}
-
-enum SlDepartureState {
-    AtStop = "ATSTOP",
-    Expected = "EXPECTED",
-    NotExpected = "NOTEXPECTED",
-    Replaced = "REPLACED",
-    Cancelled = "CANCELLED",
-    Missed = "MISSED",
-    Passed = "PASSED",
-    NotCalled = "NOTCALLED",
-    Inhibited = "INHIBITED",
-    Boarding = "BOARDING",
-    BoardingClosed = "BOARDINGCLOSED",
-    Departed = "DEPARTED",
-    AssumedDeparted = "ASSUMEDDEPARTED",
-}
+import {SlTrackedLine, SlTrackedSite, SlTransportMode, SlLineGroup, SlDepartureState}
+    from "./sl-types.ts";
 
 interface SlDeparture {                     // Example:
     site_id: number,                        // 9204
@@ -136,5 +91,13 @@ function parse_departure(json: object, site_id: number): SlDeparture {
     }
 }
 
+function parse_departures(json: object, site_id: number): SlDeparture[] {
+    if (!("departures" in json) || !Array.isArray(json.departures))
+        throw new Error("Expected JSON property 'departures'");
+    return json.departures.map((d: object) => {
+        return parse_departure(d, site_id);
+    });
+}
+
 export type {SlTrackedLine, SlTrackedSite, SlDepartureState, SlDeparture};
-export {SlTransportMode, SlLineGroup, parse_departure}
+export {SlTransportMode, SlLineGroup, parse_departures}

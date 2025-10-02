@@ -1,6 +1,7 @@
-import {SlData} from "../../util/sl/sl.ts";
-import SlDepartureCard from "./SlDepartureCard.tsx";
 import React from "react";
+
+import SlData from "../../types/sl/SlData.ts";
+import SlDepartureCard from "./SlDepartureCard.tsx";
 
 const SlDepartureList: React.FC<{sl_data: SlData}> = ({sl_data}) => {
     return <div className="sl-departure-list">

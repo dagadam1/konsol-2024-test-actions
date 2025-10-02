@@ -1,16 +1,4 @@
-import {
-    SlTrackedSite,
-    SlDeparture,
-    parse_departure
-} from "./types.ts";
-
-function parse_departures(json: object, site_id: number): SlDeparture[] {
-    if (!("departures" in json) || !Array.isArray(json.departures))
-        throw new Error("Expected JSON property 'departures'");
-    return json.departures.map((d: object) => {
-        return parse_departure(d, site_id);
-    });
-}
+import {parse_departures, SlDeparture, SlTrackedSite} from "./SlDeparture.ts";
 
 class SlData {
     tracked_sites: SlTrackedSite[];
@@ -57,4 +45,4 @@ class SlData {
     }
 }
 
-export { SlData };
+export default SlData;

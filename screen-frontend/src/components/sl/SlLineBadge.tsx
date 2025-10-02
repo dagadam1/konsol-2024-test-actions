@@ -1,6 +1,8 @@
 import React from "react";
-import {SlLineGroup, SlTransportMode} from "../../util/sl/types.ts";
-import "../../styles/SlDepartureCard.css";
+
+import "../../styles/sl/SlDepartureCard.css";
+
+import {SlLineGroup, SlTransportMode} from "../../types/sl/SlDeparture.ts";
 
 // SVG:s shamelessly taken from sl.se Sök avgångar
 const icon_size = "2vw";

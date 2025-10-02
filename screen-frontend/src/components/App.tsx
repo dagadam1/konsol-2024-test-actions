@@ -1,10 +1,13 @@
-import { createContext, useEffect, useState } from 'react'
-import './index.css'
-import './App.css'
-import Slideshow from './components/Slideshow'
-import { SlideData } from './types'
-import { SlData } from "./util/sl/sl.ts";
-import SlDepartureList from "./components/sl/SlDepartureList.tsx";
+import { useEffect, useState } from 'react'
+
+import '../index.css';
+import '../styles/App.css';
+
+import Slideshow from './slides/Slideshow.tsx'
+import { SlideData } from '../types/slides/SlideData.ts'
+
+import SlDepartureList from "./sl/SlDepartureList.tsx";
+import SlData from "../types/sl/SlData.ts";
 
 function App() {
   const [slides, setSlides] = useState<SlideData[]>([]);

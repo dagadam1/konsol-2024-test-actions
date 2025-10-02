@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react'
-import '../styles/slideshow.css'
-import { SlideData } from '../types';
+import { useEffect, useState } from 'react';
+
+import '../../styles/slides/Slideshow.css';
+
+import { SlideData } from '../../types/slides/SlideData.ts';
 
 type Props = {
     slides: SlideData[];
@@ -25,7 +27,7 @@ const Slideshow = ({ slides }: Props) => {
     
     if (slides.length === 0) {
         return <div>Loading slides...</div>;
-    };
+    }
     
   return (
     <>
@@ -41,4 +43,4 @@ const Slideshow = ({ slides }: Props) => {
   )
 }
 
-export default Slideshow
+export default Slideshow;

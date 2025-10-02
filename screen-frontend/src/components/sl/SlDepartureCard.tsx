@@ -1,6 +1,8 @@
 import React from "react";
-import {SlDeparture} from "../../util/sl/types.ts";
-import "../../styles/SlDepartureCard.css";
+
+import "../../styles/sl/SlDepartureCard.css";
+
+import {SlDeparture} from "../../types/sl/SlDeparture.ts";
 import SlLineBadge from "./SlLineBadge.tsx";
 
 const SlDepartureCard: React.FC<{ departure: SlDeparture }> = ({ departure }) => {
