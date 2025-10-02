@@ -52,8 +52,7 @@
   overflow: hidden;
 }
 .calendar-frame {
-  filter: invert(1) hue-rotate(180deg);
-  background-color: #00000000;
+  filter: brightness(86%) invert(1) hue-rotate(180deg);
   width: 100%;
   height: 100%;
 }
