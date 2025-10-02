@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use chrono::NaiveDateTime;
 
-use crate::schema::{ slides, users };
+use crate::schema::{ slides, users, settings };
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, QueryableByName, Insertable)]
 #[diesel(table_name = slides)]
@@ -22,4 +22,13 @@ pub struct User {
     pub id: String,
     pub email: String,
     pub admin: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Queryable, QueryableByName, Insertable, Selectable)]
+#[diesel(table_name = settings)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct Settings {
+    pub id: i32,
+    pub layout_type: String,
+    pub color_mode: String,
 }
