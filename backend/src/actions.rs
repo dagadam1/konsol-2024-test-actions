@@ -125,6 +125,18 @@ pub fn check_user(conn: &mut SqliteConnection, email_str: &str) -> Result<Option
     )
 }
 
+pub fn get_settings(conn: &mut SqliteConnection) -> Result<models::Settings, DbError> {
+    use crate::schema::settings::dsl::*;
+
+    log::info!("Fetching settings from database");
+    let setting = settings.first::<models::Settings>(conn);
+    log::info!("Fetched settings from database: {:?}", setting);
+    let setting = setting?;
+
+    log::info!("Fetched settings from database: {:?}", setting);
+    Ok(setting)
+}
+
 #[cfg(test)]
 mod tests {
     use chrono::NaiveDateTime;

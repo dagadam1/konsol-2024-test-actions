@@ -2,7 +2,7 @@ use crate::actions;
 use crate::auth;
 use crate::auth::PermissionLevel;
 use crate::fs_helpers;
-use crate::models::User;
+use crate::models::{User, Settings};
 
 use super::auth::check_user_permission;
 
@@ -217,4 +217,34 @@ pub(crate) async fn list_users(caller: AuthenticatedUser, pool: web::Data<DbPool
     } else {
         Ok(HttpResponse::Forbidden().finish())
     }
+}
+
+
+// --- Settings ---
+#[derive(Debug, Serialize, Deserialize)]
+struct SettingsResponse {
+    pub layout_type: String,
+    pub color_mode: String,
+}
+impl From<Settings> for SettingsResponse {
+    fn from(settings: Settings) -> Self {
+        SettingsResponse {
+            layout_type: settings.layout_type,
+            color_mode: settings.color_mode,
+        }
+    }
+}
+
+#[get("/api/screen/settings")]
+pub(crate) async fn get_settings(pool: web::Data<DbPool>) -> actix_web::Result<HttpResponse> {
+    // Use web::block to avoid blocking async
+    let settings = web::block(move || {
+        let mut conn = pool.get()?;
+
+        actions::get_settings(&mut conn)
+    }).await?.map_err(error::ErrorInternalServerError)?;
+
+    let settings_response: SettingsResponse = settings.into();
+
+    Ok(HttpResponse::Ok().json(web::Json(settings_response)))
 }

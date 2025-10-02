@@ -1,6 +1,14 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    settings (id) {
+        id -> Integer,
+        layout_type -> Text,
+        color_mode -> Text,
+    }
+}
+
+diesel::table! {
     slides (id) {
         id -> Text,
         caption -> Text,
@@ -20,6 +28,7 @@ diesel::table! {
 }
 
 diesel::allow_tables_to_appear_in_same_query!(
+    settings,
     slides,
     users,
 );
