@@ -174,3 +174,22 @@ List all allowed users and their permissions. Needs admin permissions.
 **Errors:**  
 - `401 Unauthorized`: If session is not authenticated.
 - `403 Forbidden`: If session does not have admin permissions.
+
+---
+### `GET /api/screen/settings`
+
+**Description:**
+Provides Json object of settings for screen layout (fullscreen|multi-layout, color_mode).
+
+**Response:**  
+- **Status Code:** `200 OK`
+- **Body:** JSON array of setting values.
+ ```json
+{
+  "layout_type": "fullscreen_slideshow" | "mixed",
+  "color_mode": "light_mode" | "dark_mode"
+}
+```
+
+**Errors:**  
+- `500 Internal Server Error`: If retrieving settings from the database fails.
