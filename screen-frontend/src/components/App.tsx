@@ -3,13 +3,18 @@ import { useEffect, useState } from 'react'
 import '../index.css';
 import '../styles/App.css';
 
-import Slideshow from './slides/Slideshow.tsx'
 import { SlideData } from '../types/slides/SlideData.ts'
 
-import SlDepartureList from "./sl/SlDepartureList.tsx";
 import SlData from "../types/sl/SlData.ts";
 
+import { LayoutType, ColorMode } from '../types/settings/settings-types.ts'
+import { Settings } from '../types/settings/Settings.ts';
+import FullscreenSlideshowLayout from './layouts/FullscreenSlideshowLayout.tsx';
+import MixedLayout from './layouts/MixedLayout.tsx';
+
 function App() {
+  const BASE_URL = 'http://localhost:8080'; // replace with 'http://f.kth.se/konsol'
+
   const [slides, setSlides] = useState<SlideData[]>([]);
 
   const [sl, setSl] = useState<{ data: SlData }>({data: new SlData([
@@ -18,8 +23,13 @@ function App() {
         // { site_id: 1080, tracked_lines: undefined }  // stockholm city
     ])});
 
+  const [settings, setSettings] = useState<Settings>(new Settings(
+    LayoutType.Mixed, 
+    ColorMode.DarkMode
+  ));
+
   useEffect(() => {
-    fetch('http://localhost:8080/api/screen/slides')
+    fetch(`${BASE_URL}/api/screen/slides`)
       .then(response => response.json())
       .then(data => {
         setSlides(data);
@@ -40,22 +50,24 @@ function App() {
     return () => clearInterval(handle);
   }, []);
 
-  return <>
-    <div className='left'>
-      <Slideshow slides={slides} />
-    </div>
-    <div className="right">
-      <p className="last-update">{`Senast uppdaterad: ${sl.data.last_update ? sl.data.last_update.toLocaleTimeString() : "Aldrig"}`}</p>
-      <SlDepartureList sl_data={sl.data}/>
-      <div className="calendar-container">
-        <iframe
-          className="calendar-frame"
-          src="https://calendar.google.com/calendar/embed?height=600&wkst=2&ctz=Europe%2FStockholm&showPrint=0&showNav=0&mode=AGENDA&hl=sv&title=Fysiksektionens%20kalender&showTabs=0&showCalendars=0&showTz=0&showDate=0&src=ZnlzaWtzZWt0aW9uZW4uc2VfMDE4N3ZibWRjaXZsOG10aW8xNDJlMjNjYXNAZ3JvdXAuY2FsZW5kYXIuZ29vZ2xlLmNvbQ&color=%23FF642B"
-          scrolling="no">
-        </iframe>
-      </div>
-    </div>
-  </>;
+  useEffect(() => {
+    fetch(`${BASE_URL}/api/screen/settings`)
+      .then(response => response.json())
+      .then(data => {
+        setSettings(data);
+      })
+      .catch(error => {
+        console.error('Error fetching settings:', error)
+      })
+  }, []);
+
+  return <> {
+    settings.layout_type === LayoutType.FullscreenSlideshow ? 
+      <FullscreenSlideshowLayout slides={slides}/> :
+    settings.layout_type === LayoutType.Mixed ?
+      <MixedLayout slides={slides} sl_data={sl.data}/> :
+    (() => {throw new Error("Invalid layout type");})()
+  } </>;
 }
 
 export default App

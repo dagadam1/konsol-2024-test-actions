@@ -1,10 +1,8 @@
 #root {
-  display: grid;
-  grid-template-columns: 6fr 2fr;
   margin: 0;
   padding: 0;
   width: 100vw;
-  text-align: center;
+  height: 100vh;
 }
 
 #slideph{
@@ -19,40 +17,3 @@
 }
 
 
-.left {
-  grid-column: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-.right {
-  grid-column: 2;
-  display: grid;
-  grid-template-rows: 1fr 20fr 19fr;
-  height: 100vh;
-  width: 100%;
-  border-left: 0.1vw solid #646cff;
-}
-
-.last-update {
-  grid-row: 1;
-}
-
-.sl-departure-list {
-  grid-row: 2;
-  overflow: hidden;
-}
-
-.calendar-container {
-  grid-row: 3;
-  width: 99%;
-  height: 100%;
-  overflow: hidden;
-}
-.calendar-frame {
-  filter: brightness(86%) invert(1) hue-rotate(180deg);
-  width: 100%;
-  height: 100%;
-}

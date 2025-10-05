@@ -22,14 +22,13 @@ p {
     display: grid;
     grid-template-columns: 8fr 2fr 2fr 1fr;
     margin: 0.3vh;
-    border: solid #ffffff 0.2vh ;
+    border: solid #555555 0.2vh ;
     border-radius: 0.2vw;
-    height: 5.55vh; /*experimentellt fastställd konstant som motsvarar 1/8 av hälften av 100 korrigerad för marginalerna mellan elementen*/
+    height: 6.4%; /*experimentellt fastställd konstant som motsvarar 1/8 av hälften av 100 korrigerad för marginalerna mellan elementen*/
 }
 
 .sl-departure-left {
     grid-column: 1;
-    height: 3em;
     align-items: center;
 }
 
