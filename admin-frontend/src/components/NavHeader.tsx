@@ -1,6 +1,7 @@
 import React from 'react'
 import '../styles/NavHeader.css'
 import { User } from '../types';
+import { Link } from 'react-router';
 
 type Props = {
   user: User | null | undefined
@@ -9,8 +10,8 @@ type Props = {
 const NavHeader = ({ user }: Props) => {
   return (
     <div className="nav-header">
-        <a href="/slides" className="slides-page-button">Slides</a>
-        {user?.permission === 'Admin' && <a href="/users" className="users-page-button">Users</a>}
+        <Link to="/slides" className="slides-page-button">Slides</Link>
+        {user?.permission === 'Admin' && <Link to="/users" className="users-page-button">Users</Link>}
     </div>
   )
 }

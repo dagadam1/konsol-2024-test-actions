@@ -1,7 +1,7 @@
 import { UserData, SlideData } from "../types";
 
 export const updateSlides = (setSlides: (slides: SlideData[]) => void) => {
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/api/screen/slides`, {
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/screen/slides`, {
         method: 'GET',
         credentials: 'include'
     })
@@ -12,7 +12,7 @@ export const updateSlides = (setSlides: (slides: SlideData[]) => void) => {
 }
 
 export const updateUsers = (setUsers: (users: UserData[]) => void) => {
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/list_users`, {
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/list_users`, {
         method: 'GET',
         credentials: 'include'
     })

@@ -29,7 +29,7 @@ const UsersPage = (props: Props) => {
 
       const newUser = { email, permission: admin ? 'Admin' : 'User' };
 
-      fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/add_user`, {
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/add_user`, {
           method: 'POST',
           credentials: 'include',
           headers: {
