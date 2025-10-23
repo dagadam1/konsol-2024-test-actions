@@ -14,7 +14,7 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  border-bottom: 0.1vw solid #646cff;
+  border-bottom: 0.2 solid #FF642B;
 }
 
 .header img {
@@ -43,7 +43,7 @@
   grid-template-rows: 1fr 39fr;
   width: 100%;
   height: 100%;
-  border-left: 0.1vw solid #646cff;
+  border-left: 0.2vw solid #FF642B;
   min-height: 0;
 }
 
