@@ -21,13 +21,13 @@ const [active, setActive] = useState("slide");
   return <>
     <div className="header">
       <img src={fysikF} alt="Fraktur F" className="fysikf"/>
-      <h1>Konsol</h1>
+      <h1>KONSol</h1>
     </div>
     
-    <div className='left'>
-      {active === "slide" ? (
+    <div className='left'> {
+      (active === "slide" && slides.length > 0) ? (
         <Slideshow slides={slides} />
-      ) : active === "calendar" ?(
+      ) : (
         <div className="calendar-container">
           <iframe
             className="calendar-frame"
@@ -35,10 +35,8 @@ const [active, setActive] = useState("slide");
             scrolling="no">
           </iframe>
         </div>
-      ): null
-      }
-      
-    </div>
+      )
+    } </div>
 
     <div className="right">
       <p className="last-update">{`Senast uppdaterad: ${sl_data.last_update ? sl_data.last_update.toLocaleTimeString() : "Aldrig"}`}</p>
