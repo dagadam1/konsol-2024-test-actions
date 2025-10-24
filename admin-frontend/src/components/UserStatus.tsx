@@ -23,7 +23,6 @@ const UserStatus = ({ user, setUser }: Props) => {
     if (user === undefined) {
         return <p>Loading...</p>
     } else if (user === null) {
-        setUser({ email: "guest", permission: "Admin" });
         return <GoogleLogin
             onSuccess={credentialResponse => {
                 const body: { id_token: string } = { id_token: credentialResponse.credential as string };
