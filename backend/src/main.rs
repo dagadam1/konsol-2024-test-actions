@@ -124,9 +124,7 @@ async fn main() -> std::io::Result<()> {
             .service(routes::remove_user)
             .service(routes::list_users)
             .service(routes::get_settings)
-            .service(actix_files::Files::new("/api/screen/slides/images",SLIDE_IMAGE_DIR))
-
-            // add route handlers
+            .service(actix_files::Files::new("/slides/images",SLIDE_IMAGE_DIR))
     })
     .bind(("0.0.0.0", 8080))?
     .run()
