@@ -10,6 +10,7 @@ use actix_cors::Cors;
 use chrono::{NaiveDate, NaiveTime};
 use diesel::{prelude::*, r2d2};
 use uuid::Uuid;
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 
 mod actions;
 mod models;
@@ -20,6 +21,8 @@ mod auth;
 
 /// Short-hand for the database pool type to use throughout the app.
 type DbPool = r2d2::Pool<r2d2::ConnectionManager<SqliteConnection>>;
+
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
 // The directory where slide images are saved. Will be created if it does not exist. This whole directory gets served as static files.
 // No trailing slash
@@ -78,6 +81,10 @@ async fn main() -> std::io::Result<()> {
     // initialize DB pool outside of `HttpServer::new` so that it is shared across all workers
     let pool = initialize_db_pool();
 
+    pool.get().expect("could not get DB connection for migrations")
+        .run_pending_migrations(MIGRATIONS)
+        .expect("could not run database migrations");
+
     // If SLIDE_IMAGE_DIR does not exist, create it
     if !fs::exists(SLIDE_IMAGE_DIR).expect("Unable to check if slide image directory exists") {
         log::info!("Creating slide image directory at {SLIDE_IMAGE_DIR}");
@@ -117,11 +124,9 @@ async fn main() -> std::io::Result<()> {
             .service(routes::remove_user)
             .service(routes::list_users)
             .service(routes::get_settings)
-            .service(actix_files::Files::new("/api/screen/slides/images",SLIDE_IMAGE_DIR))
-
-            // add route handlers
+            .service(actix_files::Files::new("/slides/images",SLIDE_IMAGE_DIR))
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("0.0.0.0", 8080))?
     .run()
     .await
 }
@@ -149,6 +154,8 @@ mod tests {
         env_logger::try_init_from_env(env_logger::Env::new().default_filter_or("info")).ok();
 
         let pool = initialize_db_pool();
+
+        
 
         let app = test::init_service(
             App::new()

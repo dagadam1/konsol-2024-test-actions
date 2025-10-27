@@ -16,7 +16,7 @@ function App() {
 
   useEffect(() => {
     // Check if logged in
-    fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/status`, {
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/status`, {
       credentials: 'include',
     })
       .then((response) => {

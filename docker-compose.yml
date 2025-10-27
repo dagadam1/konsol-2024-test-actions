@@ -1,0 +1,26 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - db_data:/app/data/db
+      - slides:/app/data/slides
+    environment:
+      - GOOGLE_ID_TOKEN=
+      - DATABASE_URL=sqlite:///app/data/db/konsol.db
+      - SLIDE_IMAGE_DIR=/app/data/slides
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  slides:

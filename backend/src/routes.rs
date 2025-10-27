@@ -38,7 +38,7 @@ use super::DbPool;
 
 // --- Slides ---
 
-#[post("/api/screen/slides/save")]
+#[post("/screen/slides/save")]
 pub(crate) async fn save_slide(
     pool: web::Data<DbPool>,
     form: MultipartForm<SlideUploadForm>,
@@ -71,7 +71,7 @@ pub(crate) async fn save_slide(
     }
 }
 
-#[get("/api/screen/slides")]
+#[get("/screen/slides")]
 pub(crate) async fn get_slides(
     pool: web::Data<DbPool>,
 ) -> actix_web::Result<impl Responder> {
@@ -93,7 +93,7 @@ struct AuthRequest {
     id_token: String,
 }
 
-#[post("/api/auth/verify")]
+#[post("/auth/verify")]
 pub(crate) async fn verify_token(req: web::Json<AuthRequest>, session: Session, pool: web::Data<DbPool>) -> HttpResponse {
 
     let client_id = std::env::var("GOOGLE_ID_TOKEN").expect("GOOGLE_ID_TOKEN should be set");
@@ -133,13 +133,13 @@ pub(crate) async fn verify_token(req: web::Json<AuthRequest>, session: Session, 
     }
 }
 
-#[get("/api/auth/status")]
+#[get("/auth/status")]
 pub(crate) async fn login_status(user: AuthenticatedUser) -> HttpResponse {
     // This only runs if the user is authenticated, see AuthenticatedUser
     HttpResponse::Ok().json(user)
 }
 
-#[post("/api/auth/logout")]
+#[post("/auth/logout")]
 pub(crate) async fn logout(_: AuthenticatedUser, session: Session) -> HttpResponse {
     session.clear();
     HttpResponse::Ok().finish()
@@ -151,7 +151,7 @@ struct AddUserRequest {
     permission: PermissionLevel,
 }
 
-#[post("/api/auth/add_user")]
+#[post("/auth/add_user")]
 pub(crate) async fn add_user(user_req: web::Json<AddUserRequest>, caller: AuthenticatedUser, pool: web::Data<DbPool>) 
 -> actix_web::Result<HttpResponse> {
     // Check if caller has admin permissions
@@ -184,7 +184,7 @@ struct RemoveUserRequest {
     id: String,
 }
 
-#[post("/api/auth/remove_user")]
+#[post("/auth/remove_user")]
 pub(crate) async fn remove_user(user_req: web::Json<RemoveUserRequest>, caller: AuthenticatedUser, pool: web::Data<DbPool>)
 -> actix_web::Result<HttpResponse> {
     // Check if caller has admin permissions
@@ -202,7 +202,7 @@ pub(crate) async fn remove_user(user_req: web::Json<RemoveUserRequest>, caller: 
     }
 }
 
-#[get("/api/auth/list_users")]
+#[get("/auth/list_users")]
 pub(crate) async fn list_users(caller: AuthenticatedUser, pool: web::Data<DbPool>) -> actix_web::Result<HttpResponse> {
     // Check if caller has admin permissions
     if let AuthenticatedUser { permission: PermissionLevel::Admin, .. } = caller {
@@ -235,7 +235,7 @@ impl From<Settings> for SettingsResponse {
     }
 }
 
-#[get("/api/screen/settings")]
+#[get("/screen/settings")]
 pub(crate) async fn get_settings(pool: web::Data<DbPool>) -> actix_web::Result<HttpResponse> {
     // Use web::block to avoid blocking async
     let settings = web::block(move || {
