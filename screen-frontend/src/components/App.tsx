@@ -13,7 +13,7 @@ import FullscreenSlideshowLayout from './layouts/FullscreenSlideshowLayout.tsx';
 import MixedLayout from './layouts/MixedLayout.tsx';
 
 function App() {
-  const BASE_URL = 'http://localhost:8080'; // replace with 'http://f.kth.se/konsol'
+  // const BASE_URL = 'http://localhost:8080'; // replace with 'http://f.kth.se/konsol'
 
   const [slides, setSlides] = useState<SlideData[]>([]);
 
@@ -29,7 +29,7 @@ function App() {
   ));
 
   useEffect(() => {
-    fetch(`${BASE_URL}/api/screen/slides`)
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/screen/slides`)
       .then(response => response.json())
       .then(data => {
         setSlides(data);
@@ -51,7 +51,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    fetch(`${BASE_URL}/api/screen/settings`)
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/screen/settings`)
       .then(response => response.json())
       .then(data => {
         setSettings(data);

@@ -34,7 +34,7 @@ const Slideshow = ({ slides }: Props) => {
         <div key={slides[currentIndex].id}>
           <h2>{slides[currentIndex].caption}</h2>
           {/* TODO: use env var instead of hardcoded link, also https */}
-          <img className='slide-image' src={'http://localhost:8080/api/screen/slides/images/' + slides[currentIndex].id +'.'+ slides[currentIndex].filetype} alt={slides[currentIndex].caption} />
+          <img className='slide-image' src={`${import.meta.env.VITE_API_BASE_URL}/screen/slides/images/${slides[currentIndex].id}.${slides[currentIndex].filetype}`} alt={slides[currentIndex].caption} />
         </div>
         <button onClick={goToPreviousSlide}>Previous</button>
         <button onClick={goToNextSlide}>Next</button>
