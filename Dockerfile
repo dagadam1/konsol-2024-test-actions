@@ -17,9 +17,9 @@ WORKDIR /work
 COPY screen-frontend ./screen-frontend
 WORKDIR /work/screen-frontend
 # Uncomment when screen frontend is ready
-# RUN npm ci --prefer-offline --no-audit --silent && npm run build --silent \
-    # && mkdir -p /out/screen \
-    # && (cp -r build/* /out/screen 2>/dev/null || cp -r dist/* /out/screen 2>/dev/null)
+RUN npm ci --prefer-offline --no-audit --silent && npm run build --silent \
+    && mkdir -p /out/screen \
+    && (cp -r build/* /out/screen 2>/dev/null || cp -r dist/* /out/screen 2>/dev/null)
 
 FROM debian:bookworm-slim AS runtime
 WORKDIR /app
@@ -37,7 +37,7 @@ RUN apt-get update && apt-get install -y \
 RUN mkdir -p /var/www/admin /var/www/screen
 COPY --from=frontend-builder /out/admin /var/www/admin
 # Uncomment when screen frontend is ready
-# COPY --from=frontend-builder /out/screen /var/www/screen
+COPY --from=frontend-builder /out/screen /var/www/screen
 
 COPY nginx.conf /etc/nginx/conf.d/app.conf
 
