@@ -7,7 +7,6 @@ services:
       - db_data:/app/data/db
       - slides:/app/data/slides
     environment:
-      - GOOGLE_ID_TOKEN=
       - DATABASE_URL=sqlite:///app/data/db/konsol.db
       - SLIDE_IMAGE_DIR=/app/data/slides
 
